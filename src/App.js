@@ -1,23 +1,46 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Route, Routes } from "react-router-dom";
+import "./App.css";
 
+// Pages
+import Dashboard from "./pages/Dashboard";
+import DriverDetails from "./pages/DriverDetails";
+import DriverManagement from "./pages/DriverManagement";
+import Header from "./pages/Header";
+import LoginPage from "./pages/Login";
+import LogisticsDashboard from "./pages/LogisticsDashboard"; // ✅ Fixed import name
+import Management from "./pages/Management";
+import ManagementCreate from "./pages/ManagementCreate";
+import ManagementView from "./pages/ManagementView";
+import Payments from "./pages/Payments";
+import Support from "./pages/Support";
+import UserDetails from "./pages/UserDetails";
+import UserManagement from "./pages/UserManagement";
+import PriceControl from "./pages/PriceControl";
+import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/header" element={<Header />} />
+        <Route path="/driver-management" element={<DriverManagement />} />
+        <Route path="/payments" element={<Payments />} />
+        <Route path="/user-management" element={<UserManagement />} />
+        <Route path="/management" element={<Management />} />
+        <Route path="/user-details" element={<UserDetails />} />
+        <Route path="/driver-details" element={<DriverDetails />} />
+        <Route path="/management-create" element={<ManagementCreate />} />
+        <Route path="/management-view/:id" element={<ManagementView />} />
+        <Route path="/logistics-dashboard" element={<LogisticsDashboard />} />
+        <Route path="/priceControl" element={<PriceControl />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+
+        {/* Added Support if needed */}
+        <Route path="/support" element={<Support />} />
+      </Routes>
     </div>
   );
 }

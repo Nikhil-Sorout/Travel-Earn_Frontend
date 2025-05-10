@@ -1,0 +1,142 @@
+.main-container {
+    display: flex;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  
+  .content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  Sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #f8f9fa;
+    z-index: 1000;
+  }
+  
+  Header {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 900;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+  }
+  
+  .form-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    display: flex;
+    width: 100%;
+  }
+  
+  .form-wrapper {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: relative; /* Added for absolute positioning of buttons */
+  }
+  
+  .form-wrapper h2 {
+    color: #1a73e8;
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+  
+  .form-wrapper p {
+    color: #5f6368;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  
+  .user-info h3 {
+    color: #202124;
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .input-pair {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .input-field {
+    flex: 1;
+  }
+  
+  .input-field label {
+    display: block;
+    color: #5f6368;
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  .input-field input,
+  .input-field select {
+    width: 100%; /* Full width within the container */
+    padding: 10px; /* Slightly increased padding for better look */
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    min-width: 550px;
+  }
+  
+  .input-field select {
+    appearance: none;
+    padding-right: 35px; /* Increased padding to accommodate longer select */
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .button-group {
+    position: absolute;
+    bottom: 20px;
+    right: 30px; /* Align to right bottom with padding */
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 0; /* Remove default margin */
+  }
+  
+  .cancel-button {
+    padding: 10px 20px;
+    background-color: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    color: #1a73e8;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .create-button {
+    padding: 10px 20px;
+    background-color: #1a73e8;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .cancel-button:hover,
+  .create-button:hover {
+    opacity: 0.9;
+  }

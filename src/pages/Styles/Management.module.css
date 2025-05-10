@@ -1,0 +1,166 @@
+/* Root Variables for Consistency */
+:root {
+  --primary-color: #0056b3;
+  --secondary-color: #043075;
+  --light-gray: #f5f5f5;
+  --dark-gray: #333;
+  --white: #fff;
+}
+
+.mainContainer {
+  display: flex;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  background-color: var(--light-gray);
+  
+}
+.loader {
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 2rem;
+  color: #4a90e2;
+}
+.contentWrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background-color: var(--light-gray);
+  padding: 20px 30px 60px 30px; 
+}
+
+/* .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #f8f9fa;
+  z-index: 1000;
+} */
+
+/* .header {
+  position: sticky;
+  top: 0;
+  background-color: #fff;
+  z-index: 900;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 20px;
+} */
+
+.userDetailsContent {
+  flex-grow: 1;
+  /* background-color: #fff; */
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.searchBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.buttonWrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdownWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.csvDropdown {
+  font-weight: bold;
+  padding: 10px;
+  height: 44px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: white;
+  color: #333;
+  width: 150px;
+  appearance: none;
+  cursor: pointer;
+  padding-right: 25px;
+}
+
+.dropdownArrow {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
+  font-size: 12px;
+  color: #555;
+}
+
+.downloadButton {
+  padding: 10px 20px;
+  background-color: #043075;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  height: 44px;
+  width: 150px;
+}
+
+.downloadButton:hover {
+  background-color: #0056b3;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: var(--white);
+  /* background-color: red; */
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  padding: 5px;
+}
+
+.tableTh,
+.tableTd {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  white-space: nowrap;
+}
+
+.tableTh {
+  background-color: #e9ecef;
+  color: #333;
+  font-weight: normal;
+}
+
+.tableTr:nthChild(even) {
+  background-color: #f2f2f2;
+}
+
+.tableTr:hover {
+  background-color: #e9ecef;
+}
+
+.viewIcon {
+  color: red;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.addNewButton {
+  margin-left: 10px;
+  padding: 13px 16px;
+  background-color: #043075;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.addNewButton:hover {
+  background-color: #0056b3;
+}

@@ -1,0 +1,60 @@
+.search-download-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Center items vertically */
+    margin-bottom: 20px;
+    background-color: #f4f4f4;
+    padding: 18px;
+    border-radius: 8px; /* Rounded corners for a modern look */
+    margin-right: 10px;
+  }
+  
+  .search-input {
+    width: 300px;
+  }
+  
+  .table-container {
+    margin-top: 20px;
+    background-color: #ffffff;
+    
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  }
+  
+  .table-row {
+    &:nth-of-type(odd) {
+      background-color: #f9f9f9;
+
+    }
+  }
+  
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .status-button {
+    font-weight: bold;
+    min-width: 80px;
+    border-radius: 4px;
+  }
+  
+
+  
+  .content-container {
+    flex: 1;
+    padding: 20px;
+    background-color: #e9ecef;
+  }
+  
+  .search-field {
+    flex-grow: 1;
+    margin-right: 16px;
+  }
+  
+  .button-group {
+    display: flex;
+  }
+  

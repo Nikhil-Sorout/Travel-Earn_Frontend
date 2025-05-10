@@ -1,5 +1,8 @@
-.App {
-  text-align: center;
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+  overflow: hidden; /* Prevent scrolling */
 }
 
 .App-logo {
@@ -35,4 +38,25 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+body {
+  margin: 0;
+}
+/* Hide scrollbar globally while keeping scroll functionality */
+* {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* Internet Explorer and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none;                /* Chrome, Safari, and newer Edge */
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent unwanted scrolling */
+  height: 100%; /* Ensure full height for flex containers */
+  width: 100%; /* Ensure full width for flex containers */
+  box-sizing: border-box; /* Include padding and border in element's width/height */
 }

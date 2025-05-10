@@ -1,0 +1,321 @@
+.main-container {
+    display: flex;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  
+  .user-details-content {
+    flex-grow: 1;
+    background-color: #f8f9fa;
+    color: #333;
+    overflow-y: auto; /* Enable scrolling for content */
+    height: 100vh; /* Full height of viewport */
+  }
+  
+  .Sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px; /* Adjust based on your sidebar width */
+    height: 100vh;
+    background-color: #f8f9fa;
+    z-index: 1000;
+  }
+  
+  .search-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 20px;
+  }
+  
+  .button-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .dropdown-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .csv-dropdown {
+    font-weight: bold;
+    padding: 10px;
+    height: 44px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+    width: 150px;
+    appearance: none;
+    cursor: pointer;
+    padding-right: 25px;
+  }
+  
+  .dropdown-arrow {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+    font-size: 12px;
+    color: #555;
+  }
+  
+  .add-driver-button,
+  .download-button,
+  .apply-button {
+    padding: 10px 20px;
+    background-color: #043075;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 44px;
+    width: 150px;
+  }
+  
+  .add-driver-button:hover,
+  .download-button:hover,
+  .apply-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Updated filter section with line */
+  .filter-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
+    gap: 10px;
+    position: relative;
+  }
+  
+  .filter-bar::after {
+    content: "";
+    position: absolute;
+    height: 2px;
+    background: #000;
+    width: 100%;
+    top: 50%;
+    z-index: -1;
+    left: 0;
+  }
+  
+  /* Ensure the filter elements are aligned with the line */
+  .search-box,
+  .filter-dropdowns,
+  .apply-button {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .filter-dropdowns {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Filter Dropdown */
+  .filter-dropdown {
+    padding: 10px;
+    height: 44px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+    width: 150px;
+    cursor: pointer;
+  }
+  
+  /* Search Box */
+  .search-box {
+    position: relative;
+  }
+  
+  .search-driver-input {
+    padding: 10px;
+    width: 150px;
+    height: 22px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #888;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  table th,
+  table td {
+    padding: 10px; /* Reduced padding to save space */
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  table th {
+    background-color: #e9ecef;
+    color: #333;
+    font-weight: normal;
+  }
+  
+  table tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  table tr:hover {
+    background-color: #e9ecef;
+  }
+  
+  .status {
+    display: inline-block;
+    width: 60px;
+    text-align: center;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  
+  .status.active {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status.inactive {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  .edit-icon {
+    font-size: 16px;
+    color: #6c757d;
+    cursor: pointer;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+  }
+  
+  .pagination-buttons {
+    display: flex;
+    gap: 5px; /* Reduced gap between buttons */
+  }
+  
+  .pagination-button {
+    padding: 5px 10px; /* Reduced padding to save space */
+    margin: 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #4d4d4d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .pagination-button.active,
+  .pagination-button:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  /* Fieldset styling */
+  .custom-fieldset {
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    padding: 30px 20px; /* Increased top padding to avoid table crowding */
+    margin: 20px 0; /* More margin for vertical spacing */
+    position: relative;
+  }
+  
+  /* Filter bar layout */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Increased horizontal gap between elements */
+    position: absolute;
+    top: -20px; /* Adjusted to position elements nicely over the border */
+    left: 20px;
+    right: 20px;
+  }
+  
+  /* Legend-like styling for each component */
+  .legend-like {
+    background: #ffffff; /* Background to break the fieldset border */
+    padding: 8px 12px; /* Increased padding for better spacing */
+    position: relative;
+    top: -10px; /* Fine-tuned to align with border */
+    margin: 10px 0; /* Added vertical margin for spacing above and below */
+    border-radius: 4px; /* Optional: rounded corners for a polished look */
+  }
+  
+  /* Ensure each component maintains its original styling */
+  .legend-like.search-box-wrapper .search-box {
+    display: flex;
+    align-items: center;
+  }
+  
+  .legend-like.dropdown-wrapper select.filter-dropdown {
+    padding: 6px 10px;
+    width: 150px; /* Optional: fixed width for consistency */
+  }
+  
+  .legend-like.button-wrapper .apply-button {
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  
+  /* Search box specific styling */
+  .search-box {
+    position: relative;
+  }
+  
+  .search-driver-input {
+    padding: 6px 30px 6px 10px;
+    width: 200px; /* Optional: fixed width for consistency */
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  /* Optional: Ensure table has enough space */
+  table {
+    margin-top: 20px; /* Added to prevent table from being too close to filter bar */
+    width: 100%;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .filter-bar {
+      flex-wrap: wrap;
+      top: -10px;
+    }
+    .legend-like {
+      flex: 1 1 100%; /* Stack elements on small screens */
+      margin: 5px 0;
+    }
+    .search-driver-input,
+    .filter-dropdown {
+      width: 100%; /* Full width on small screens */
+    }
+  }

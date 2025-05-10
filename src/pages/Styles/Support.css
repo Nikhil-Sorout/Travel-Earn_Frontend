@@ -1,0 +1,248 @@
+.main-container {
+    display: flex;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+  
+  .content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  Header {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    z-index: 900;
+    border-bottom: 1px solid #ddd;
+    padding: 10px 20px;
+  }
+  
+  .support-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .ticket-filters {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Aligns content to the left */
+  }
+  
+  .ticket-filters h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .filter-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .filter-buttons span {
+    padding: 5px 15px;
+    cursor: pointer;
+    text-decoration: underline;
+    color: #757575;
+  }
+  
+  .filter-buttons span.active {
+    color: #000;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  .search-bar {
+    margin-top: 10px; /* Spacing between filter buttons and search bar */
+  }
+  
+  .search-bar input {
+    padding: 8px;
+    width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .ticket-section {
+    display: flex;
+    gap: 20px;
+    height: calc(100% - 120px); /* Adjusted for filters and search bar height */
+  }
+  
+  .ticket-list {
+    flex: 1;
+    max-width: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+  }
+  
+  .ticket-item {
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .ticket-item:hover,
+  .ticket-item.selected {
+    background-color: #f0f0f0;
+  }
+  
+  .priority {
+    padding: 2px 10px;
+    border-radius: 12px;
+    color: #fff;
+    margin-right: 10px;
+    font-size: 12px;
+  }
+  
+  .priority.High {
+    background-color: #d32f2f;
+  }
+  
+  .priority.Medium {
+    background-color: #ff9800;
+  }
+  
+  .time {
+    color: #757575;
+    margin-left: 10px;
+    font-size: 12px;
+  }
+  
+  .ticket-details {
+    margin-top: 5px;
+  }
+  
+  .ticket-details h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .ticket-details p {
+    margin: 5px 0;
+    color: #757575;
+    font-size: 14px;
+  }
+  
+  .company {
+    color: #1a73e8;
+    font-size: 13px;
+  }
+  
+  .ticket-details-panel {
+    flex: 2;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  
+  .ticket-details-panel h3 {
+    color: #1a73e8;
+    margin-bottom: 10px;
+    font-size: 18px;
+  }
+  
+  .ticket-details-panel p {
+    color: #757575;
+    font-size: 14px;
+  }
+  
+  .message-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .message {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .user-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .message-content {
+    flex: 1;
+  }
+  
+  .message-content p {
+    margin: 0;
+    color: #757575;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .message-content strong {
+    color: #333;
+  }
+  
+  .reply-section {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  .reply-section textarea {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 14px;
+    min-height: 80px;
+  }
+  
+  .send-button {
+    padding: 10px 20px;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: opacity 0.2s;
+  }
+  
+  .send-button:hover {
+    opacity: 0.9;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .ticket-section {
+      flex-direction: column;
+      height: auto;
+    }
+  
+    .ticket-list {
+      max-width: 100%;
+    }
+  
+    .search-bar input {
+      width: 100%;
+    }
+    .Sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px; /* Adjust based on your sidebar width */
+        height: 100vh;
+        background-color: #f8f9fa;
+        z-index: 1000;
+      }
+      
+  }
