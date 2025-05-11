@@ -4,39 +4,46 @@ import Sidebar from "../Components/Sidebar";
 import Header from "./Header";
 import styles from './Styles/Management.module.css';
 import Api from '../Services/Api';
+import {
+  exportTableToExcel,
+  exportTableToPDF,
+  exportTableToCSV,
+} from './Utils/download';
 
 const Management = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedFormat, setSelectedFormat] = useState('CSV');
+
   const navigate = useNavigate();
 
-  useEffect(()=>{
+  useEffect(() => {
     const delayDebounce = setTimeout(() => {
-    const fetchAdmins = async () => {
-      setLoading(true);
-      try{
-        const response = await Api.get((`/admin/getAllAdmins?search=${searchQuery}`),{
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        } );
-        console.log(response.data);
-        setAdmins(response.data.admins);
+      const fetchAdmins = async () => {
+        setLoading(true);
+        try {
+          const response = await Api.get((`/admin/getAllAdmins?search=${searchQuery}`), {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          console.log(response.data);
+          setAdmins(response.data.admins);
+        }
+        catch (error) {
+          console.error("Error fetching admins:", error);
+        }
+        finally {
+          setLoading(false); // 👈 end loading
+        }
       }
-      catch(error){
-        console.error("Error fetching admins:", error);
-      }
-      finally {
-        setLoading(false); // 👈 end loading
-      }
+      fetchAdmins();
     }
-    fetchAdmins();
-  }
-    , 400); // Delay in ms
+      , 400); // Delay in ms
     return () => clearTimeout(delayDebounce);
-  },[searchQuery]);
+  }, [searchQuery]);
 
   const handleAddNewClick = () => {
     navigate("/management-create");
@@ -55,12 +62,27 @@ const Management = () => {
           <div className={styles.searchBar}>
             <div className={styles.buttonWrapper}>
               <div className={styles.dropdownWrapper}>
-                <select className={styles.csvDropdown}>
-                  <option><b>CSV</b></option>
+                <select
+                  className={styles.csvDropdown}
+                  value={selectedFormat}
+                  onChange={(e) => setSelectedFormat(e.target.value)}
+                >
+                  <option value="CSV">CSV</option>
+                  <option value="Excel">Excel</option>
+                  <option value="PDF">PDF</option>
                 </select>
                 <span className={styles.dropdownArrow}>▼</span>
               </div>
-              <button className={styles.downloadButton}>Download</button>
+              <button
+                className={styles.downloadButton}
+                onClick={() => {
+                  if (selectedFormat === 'CSV') exportTableToCSV('admin-table', admins);
+                  else if (selectedFormat === 'Excel') exportTableToExcel('admin-table', admins);
+                  else if (selectedFormat === 'PDF') exportTableToPDF('admin-tabel', admins);
+                }}
+              >
+                Download
+              </button>
               <button className={styles.addNewButton} onClick={handleAddNewClick}>
                 Add New
               </button>
@@ -70,7 +92,7 @@ const Management = () => {
           {loading ? (
             <div className={styles.loader}>Loading...</div> // 👈 loader placeholder
           ) : (
-            <table className={styles.table}>
+            <table id='admin-table' className={styles.table}>
               <thead>
                 <tr>
                   <th className={styles.tableTh}>Admin Name</th>

@@ -3,7 +3,7 @@ import api from '../Services/Api';
 import { ChevronDown, ChevronLeft, ChevronRight, Edit, Search } from 'lucide-react';
 import Sidebar from "../Components/Sidebar";
 import '../pages/Styles/Logistic.css';
-
+import { exportTableToCSV, exportTableToExcel, exportTableToPDF } from './Utils/download';
 
 
 const LogisticsDashboard = () => {
@@ -15,6 +15,8 @@ const LogisticsDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [driverName, setDriverName] = useState('');
   const [date, setDate] = useState('');
+
+  const [selectedFormat, setSelectedFormat] = useState('CSV');
 
   const totalPages = Math.ceil(activeTravel / transactionsPerPage);
 
@@ -145,20 +147,39 @@ const LogisticsDashboard = () => {
         </div>
 
         {/* Load List */}
-        <div className="load-list-section">
-          <div className="list-header">
-            <h2>Travel List</h2>
-            <div className="download-buttons">
-              <div className="csv-download">
-                <span>CSV</span>
-                <ChevronDown size={16} />
+        <div className="searchBar">
+            <div className="buttonWrapper">
+              <div className="dropdownWrapper">
+                <select
+                  className="csvDropdown"
+                  value={selectedFormat}
+                  onChange={(e) => setSelectedFormat(e.target.value)}
+                >
+                  <option value="CSV">CSV</option>
+                  <option value="Excel">Excel</option>
+                  <option value="PDF">PDF</option>
+                </select>
+                <span className="dropdownArrow">▼</span>
               </div>
-              <button className="download-button">Download</button>
+              <button
+                className="downloadButton"
+                onClick={() => {
+                  if (selectedFormat === 'CSV') exportTableToCSV('travel-table', travelHistory);
+                  else if (selectedFormat === 'Excel') exportTableToExcel('travel-table', travelHistory);
+                  else if (selectedFormat === 'PDF') exportTableToPDF('travel-table', travelHistory);
+                }}
+              >
+                Download
+              </button>
             </div>
           </div>
+          
+          
 
+
+        <div className="table-container">
           <div className="table-wrapper">
-            <table>
+            <table id="travel-table">
               <thead>
                 <tr>
                   <th>Travel ID</th>
@@ -221,9 +242,10 @@ const LogisticsDashboard = () => {
             </button>
           </div>
         </div>
+        </div>
 
       </div>
-    </div>
+    // </div>
   );
 };
 

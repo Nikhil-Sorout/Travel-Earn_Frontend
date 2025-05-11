@@ -35,7 +35,7 @@ const DriverManagement = () => {
       const fetchDrivers = async () => {
         setLoading(true);
         try {
-          const response = await api.get(`/t/getUserTravelDetails?page=${currentPage}&limit=${transactionsPerPage}&search=${searchQuery}`, {
+          const response = await api.get(`/admin/getUserTravelDetails?page=${currentPage}&limit=${transactionsPerPage}&search=${searchQuery}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });
           setDrivers(response.data.data);
@@ -57,13 +57,13 @@ const DriverManagement = () => {
     if (isModalOpen && selectedUserPhone) {
       const fetchUser = async () => {
         try {
-          const response = await api.get(`/t/travelhistory/${selectedUserPhone}`, {
+          const response = await api.get(`/admin/travelhistory/${selectedUserPhone}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             }
           });
           setSelectedUser(response.data);
-          // console.log(response.data);
+          console.log(response.data);
         } catch (error) {
           console.error("Failed to fetch user:", error);
         }

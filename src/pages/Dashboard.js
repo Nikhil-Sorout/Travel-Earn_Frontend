@@ -21,17 +21,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
+      const token = localStorage.getItem('token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
       const fetchStats = async () => {
+        console.log(localStorage.getItem('token'))
         try {
           const [statsRes, usersRes, totalEarningsRes, transactionRes] = await Promise.all([
-            api.get("/admin/getStats"),
-            api.get("/api/totalUsers"),
-            api.get("/earn/totalEarnings"),
-            api.get(`/p/getTransactionHistory?page=${currentPage}&limit=${transactionsPerPage}&search=${searchQuery}`)
-          ],{
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          });
-  
+            api.get("/admin/getDashboardStats", config),
+            api.get("/admin/getTotalUsers", config),
+            api.get("/admin/getTotalEarnings", config),
+            api.get(`/admin/getTransactionHistory?page=${currentPage}&limit=${transactionsPerPage}&search=${searchQuery}`, config)
+          ]);
+
           setTotalTransactions(transactionRes.data.total);
           setStats(statsRes.data);
           setTotalUsers(usersRes.data);
@@ -41,10 +44,10 @@ const Dashboard = () => {
           console.error("Failed to fetch stats:", error);
         }
       };
-  
+
       fetchStats();
     }, 400); // Delay in ms
-  
+
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, currentPage]);
 
@@ -84,7 +87,7 @@ const Dashboard = () => {
     <div className={styles.dashboardContainer}>
       <Sidebar />
       <div className={styles.dashboardContent}>
-        <Header onSearch={setSearchQuery}/>
+        <Header onSearch={setSearchQuery} />
 
         <div className={styles.topSection}>
           <div className={styles.card}>
