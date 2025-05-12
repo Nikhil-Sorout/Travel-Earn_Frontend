@@ -54,7 +54,7 @@ const LogisticsDashboard = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setActiveTravel(response.data.pagination.total);
-        console.log("Response:", response.data);
+        // console.log("Response:", response.data);
         setTravelHistory(response.data.data);
       } catch (error) {
         console.error('Error fetching travel history:', error);

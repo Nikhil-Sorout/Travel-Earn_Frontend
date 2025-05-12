@@ -16,7 +16,7 @@ const Header = ({ onSearch }) => {
       setAdminDetails(JSON.parse(admin));
     }
   }, []);
-  console.log(adminDetails, "adminDetails");
+  // console.log(adminDetails, "adminDetails");
 
   const handleSearch = (e) => {
     const value = e.target.value;

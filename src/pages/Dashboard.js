@@ -26,7 +26,7 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       };
       const fetchStats = async () => {
-        console.log(localStorage.getItem('token'))
+        // console.log(localStorage.getItem('token'))
         try {
           const [statsRes, usersRes, totalEarningsRes, transactionRes] = await Promise.all([
             api.get("/admin/getDashboardStats", config),
@@ -46,7 +46,7 @@ const Dashboard = () => {
       };
 
       fetchStats();
-    }, 400); // Delay in ms
+    }, 40); // Delay in ms
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, currentPage]);

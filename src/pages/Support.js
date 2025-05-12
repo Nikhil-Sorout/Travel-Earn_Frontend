@@ -43,15 +43,15 @@ const Support = () => {
   };
 
   const handleMarkAsResolved = () => {
-    console.log("Marked as resolved:", selectedTicket.id);
+    // console.log("Marked as resolved:", selectedTicket.id);
     // Logic to update ticket status
   };
 
   const handleSendReply = () => {
-    console.log("Reply sent:", {
-      ticketId: selectedTicket.id,
-      reply: replyText,
-    });
+    // console.log("Reply sent:", {
+    //   ticketId: selectedTicket.id,
+    //   reply: replyText,
+    // });
     setReplyText("");
   };
 

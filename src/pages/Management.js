@@ -29,7 +29,7 @@ const Management = () => {
               Authorization: `Bearer ${localStorage.getItem('token')}`
             }
           });
-          console.log(response.data);
+          // console.log(response.data);
           setAdmins(response.data.admins);
         }
         catch (error) {

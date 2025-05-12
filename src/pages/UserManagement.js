@@ -63,7 +63,7 @@ const DriverManagement = () => {
             }
           });
           setSelectedUser(response.data);
-          console.log(response.data);
+          // console.log(response.data);
         } catch (error) {
           console.error("Failed to fetch user:", error);
         }
@@ -75,7 +75,7 @@ const DriverManagement = () => {
 
   const handleDeleteClick = (user) => {
     setDriverDetails(user);
-    console.log("Driver Details: ", driverDetails);
+    // console.log("Driver Details: ", driverDetails);
     setSelectedUserPhone(user.phoneNumber);
     setIsModalOpen(true);
   };
@@ -85,7 +85,7 @@ const DriverManagement = () => {
       const response = await api.delete(`/editp/delete/${driverDetails?.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      console.log("Delete Response: ", response.data);
+      // console.log("Delete Response: ", response.data);
       setDrivers(drivers.filter((driver) => driver._id !== driverDetails._id));
       setIsModalOpen(false);
       setSelectedUser(null);
