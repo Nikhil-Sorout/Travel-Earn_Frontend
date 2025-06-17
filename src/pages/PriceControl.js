@@ -9,11 +9,15 @@ const PriceControl = () => {
     DeliveryFee: 0,
     Margin: 0,
     WeightRateTrain: 0,
+    WeightRateCar: 0,
     WeightRateAirplane: 0,
     DistanceRateAirplane: 0,
     DistanceRateTrainBase: 0,
+    DistanceRateCarBase: 0,
     DistanceRateTrainMid: 0,
-    DistanceRateTrainHigh: 0
+    DistanceRateCarMid: 0,
+    DistanceRateTrainHigh: 0,
+    DistanceRateCarHigh: 0
   });
   const [modalInputs, setModalInputs] = useState({ ...pricing });
   const [status, setStatus] = useState('');
@@ -31,9 +35,24 @@ const PriceControl = () => {
   
         const config = response.data;
         
-        const newPricing = {TE: config.TE, DeliveryFee: config.deliveryFee, Margin: config.margin, WeightRateTrain: config.weightRateTrain, WeightRateAirplane: config.weightRateAirplane, DistanceRateAirplane: config.distanceRateAirplane, DistanceRateTrainBase: config.distanceRateTrain.base, DistanceRateTrainMid: config.distanceRateTrain.mid, DistanceRateTrainHigh: config.distanceRateTrain.high};
+        const newPricing = {
+          TE: config.TE,
+          DeliveryFee: config.deliveryFee,
+          Margin: config.margin,
+          WeightRateTrain: config.weightRateTrain,
+          WeightRateCar: config.weightRateTrain,
+          WeightRateAirplane: config.weightRateAirplane,
+          DistanceRateAirplane: config.distanceRateAirplane,
+          DistanceRateTrainBase: config.distanceRateTrain.base,
+          DistanceRateCarBase: config.distanceRateTrain.base,
+          DistanceRateTrainMid: config.distanceRateTrain.mid,
+          DistanceRateCarMid: config.distanceRateTrain.mid,
+          DistanceRateTrainHigh: config.distanceRateTrain.high,
+          DistanceRateCarHigh: config.distanceRateTrain.high
+        };
         
         setPricing(newPricing);
+        setModalInputs(newPricing);
 
       } catch (error) {
         console.error('Failed to fetch pricing:', error);
@@ -48,7 +67,20 @@ const PriceControl = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (value >= 0) {
-      setModalInputs({ ...modalInputs, [name]: value });
+      const newModalInputs = { ...modalInputs, [name]: value };
+      
+      // Sync car values with train values
+      if (name === 'WeightRateTrain') {
+        newModalInputs.WeightRateCar = value;
+      } else if (name === 'DistanceRateTrainBase') {
+        newModalInputs.DistanceRateCarBase = value;
+      } else if (name === 'DistanceRateTrainMid') {
+        newModalInputs.DistanceRateCarMid = value;
+      } else if (name === 'DistanceRateTrainHigh') {
+        newModalInputs.DistanceRateCarHigh = value;
+      }
+      
+      setModalInputs(newModalInputs);
     }
   };
 
@@ -78,7 +110,7 @@ const PriceControl = () => {
       });
   
       if (res.data?.success) {
-        setPricing(modalInputs); // reflect changes in the UI
+        setPricing(modalInputs);
         setStatus('Pricing updated successfully!');
         setIsModalOpen(false);
       } else {
@@ -98,6 +130,16 @@ const PriceControl = () => {
     setModalInputs(pricing);
   };
 
+  // Group related pricing items
+  const pricingGroups = {
+    'Basic Rates': ['TE', 'DeliveryFee', 'Margin'],
+    'Weight Rates': ['WeightRateTrain', 'WeightRateCar', 'WeightRateAirplane'],
+    'Distance Rates - Airplane': ['DistanceRateAirplane'],
+    'Distance Rates - Train/Car Base': ['DistanceRateTrainBase', 'DistanceRateCarBase'],
+    'Distance Rates - Train/Car Mid': ['DistanceRateTrainMid', 'DistanceRateCarMid'],
+    'Distance Rates - Train/Car High': ['DistanceRateTrainHigh', 'DistanceRateCarHigh']
+  };
+
   return (
     <div className={styles.adminWrapper}>
       <Sidebar />
@@ -108,10 +150,15 @@ const PriceControl = () => {
 
         <section className={styles.pricingSection}>
           <div className={styles.pricingGrid}>
-            {Object.entries(pricing).map(([key, value]) => (
-              <div key={key} className={styles.pricingItem}>
-                <span className={styles.pricingLabel}>{key.replace(/([A-Z])/g, ' $1')}</span>
-                <span className={styles.pricingValue}>₹ {parseFloat(value).toFixed(2)}</span>
+            {Object.entries(pricingGroups).map(([groupName, fields]) => (
+              <div key={groupName} className={styles.pricingGroup}>
+                <h3 className={styles.groupHeader}>{groupName}</h3>
+                {fields.map(key => (
+                  <div key={key} className={styles.pricingItem}>
+                    <span className={styles.pricingLabel}>{key.replace(/([A-Z])/g, ' $1')}</span>
+                    <span className={styles.pricingValue}>₹ {parseFloat(pricing[key]).toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
@@ -126,19 +173,25 @@ const PriceControl = () => {
                 <button className={styles.closeButton} onClick={handleCloseModal}>×</button>
               </header>
               <form onSubmit={handleSubmit} className={styles.formGrid}>
-                {Object.entries(modalInputs).map(([key, value]) => (
-                  <div key={key} className={styles.formGroup}>
-                    <label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1')}</label>
-                    <input
-                      type="number"
-                      id={key}
-                      name={key}
-                      value={value}
-                      onChange={handleChange}
-                      min="0"
-                      step="0.01"
-                      required
-                    />
+                {Object.entries(pricingGroups).map(([groupName, fields]) => (
+                  <div key={groupName} className={styles.formGroup}>
+                    <h3 className={styles.groupHeader}>{groupName}</h3>
+                    {fields.map(key => (
+                      <div key={key} className={styles.inputGroup}>
+                        <label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1')}</label>
+                        <input
+                          type="number"
+                          id={key}
+                          name={key}
+                          value={modalInputs[key]}
+                          onChange={handleChange}
+                          min="0"
+                          step="0.01"
+                          required
+                          disabled={key.includes('Car')}
+                        />
+                      </div>
+                    ))}
                   </div>
                 ))}
                 <button type="submit">Update Pricing</button>
