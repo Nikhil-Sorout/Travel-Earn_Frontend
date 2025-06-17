@@ -61,7 +61,6 @@ const PriceControl = () => {
   
     fetchPricing();
   }, []);
-  
 
   // Handle input changes in modal
   const handleChange = (e) => {
@@ -122,22 +121,10 @@ const PriceControl = () => {
       setStatus('Error updating pricing.');
     }
   };
-  
-  
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalInputs(pricing);
-  };
-
-  // Group related pricing items
-  const pricingGroups = {
-    'Basic Rates': ['TE', 'DeliveryFee', 'Margin'],
-    'Weight Rates': ['WeightRateTrain', 'WeightRateCar', 'WeightRateAirplane'],
-    'Distance Rates - Airplane': ['DistanceRateAirplane'],
-    'Distance Rates - Train/Car Base': ['DistanceRateTrainBase', 'DistanceRateCarBase'],
-    'Distance Rates - Train/Car Mid': ['DistanceRateTrainMid', 'DistanceRateCarMid'],
-    'Distance Rates - Train/Car High': ['DistanceRateTrainHigh', 'DistanceRateCarHigh']
   };
 
   return (
@@ -150,15 +137,10 @@ const PriceControl = () => {
 
         <section className={styles.pricingSection}>
           <div className={styles.pricingGrid}>
-            {Object.entries(pricingGroups).map(([groupName, fields]) => (
-              <div key={groupName} className={styles.pricingGroup}>
-                <h3 className={styles.groupHeader}>{groupName}</h3>
-                {fields.map(key => (
-                  <div key={key} className={styles.pricingItem}>
-                    <span className={styles.pricingLabel}>{key.replace(/([A-Z])/g, ' $1')}</span>
-                    <span className={styles.pricingValue}>₹ {parseFloat(pricing[key]).toFixed(2)}</span>
-                  </div>
-                ))}
+            {Object.entries(pricing).map(([key, value]) => (
+              <div key={key} className={styles.pricingItem}>
+                <span className={styles.pricingLabel}>{key.replace(/([A-Z])/g, ' $1')}</span>
+                <span className={styles.pricingValue}>₹ {parseFloat(value).toFixed(2)}</span>
               </div>
             ))}
           </div>
@@ -173,25 +155,20 @@ const PriceControl = () => {
                 <button className={styles.closeButton} onClick={handleCloseModal}>×</button>
               </header>
               <form onSubmit={handleSubmit} className={styles.formGrid}>
-                {Object.entries(pricingGroups).map(([groupName, fields]) => (
-                  <div key={groupName} className={styles.formGroup}>
-                    <h3 className={styles.groupHeader}>{groupName}</h3>
-                    {fields.map(key => (
-                      <div key={key} className={styles.inputGroup}>
-                        <label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1')}</label>
-                        <input
-                          type="number"
-                          id={key}
-                          name={key}
-                          value={modalInputs[key]}
-                          onChange={handleChange}
-                          min="0"
-                          step="0.01"
-                          required
-                          disabled={key.includes('Car')}
-                        />
-                      </div>
-                    ))}
+                {Object.entries(modalInputs).map(([key, value]) => (
+                  <div key={key} className={styles.formGroup}>
+                    <label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1')}</label>
+                    <input
+                      type="number"
+                      id={key}
+                      name={key}
+                      value={value}
+                      onChange={handleChange}
+                      min="0"
+                      step="0.01"
+                      required
+                      disabled={key.includes('Car')}
+                    />
                   </div>
                 ))}
                 <button type="submit">Update Pricing</button>
