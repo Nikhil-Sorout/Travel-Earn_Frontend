@@ -18,6 +18,9 @@ import UserDetails from "./pages/UserDetails";
 import UserManagement from "./pages/UserManagement";
 import PriceControl from "./pages/PriceControl";
 import ForgotPassword from "./pages/ForgotPassword";
+import TravelerReport from "./pages/TravelerReport";
+import SenderReport from "./pages/SenderReport";
+import Reports from "./pages/Reports";
 function App() {
   return (
     <div className="App">
@@ -40,6 +43,11 @@ function App() {
 
         {/* Added Support if needed */}
         <Route path="/support" element={<Support />} />
+        
+        {/* Report Routes */}
+        <Route path="/traveler-report" element={<TravelerReport />} />
+        <Route path="/sender-report" element={<SenderReport />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </div>
   );

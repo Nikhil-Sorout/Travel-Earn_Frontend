@@ -3,7 +3,9 @@ import {
   FaHome,
   FaMoneyBillAlt,
   FaUserAlt, 
-  FaMoneyBillWave
+  FaMoneyBillWave,
+  FaFileAlt,
+  FaUsers
 } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom"; // Import useLocation for current route
 import styles from "../pages/Styles/Sidebar.module.css";
@@ -65,6 +67,16 @@ const Sidebar = () => {
             }`}
           >
             <FaMoneyBillWave className={styles.sidebarIcon} /> Pricing Control
+          </Link>
+        </li>
+        <li className={styles.sidebarMenuItem}>
+          <Link
+            to="/reports"
+            className={`${styles.sidebarLink} ${
+              location.pathname === "/reports" ? styles.sidebarLinkActive : ""
+            }`}
+          >
+            <FaFileAlt className={styles.sidebarIcon} /> Reports
           </Link>
         </li>
       </ul>

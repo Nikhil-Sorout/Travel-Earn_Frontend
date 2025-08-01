@@ -39,6 +39,7 @@ const DriverManagement = () => {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });
           setDrivers(response.data.data);
+          console.log(response.date.data)
           setTotalUsers(response.data.totalCount);
         } catch (error) {
           console.error('Error fetching drivers:', error);
@@ -148,7 +149,7 @@ const DriverManagement = () => {
         <table id="driver-table" className={styles.table}>
           <thead>
             <tr>
-              <th>User</th>
+              <th>Traveller</th>
               <th>Phone Number</th>
               <th>Earning</th>
               <th>Distance</th>
@@ -236,11 +237,12 @@ const DriverManagement = () => {
                         </span>
                       </div>
                       <div className={styles.travelDetails}>
+                        {console.log(travel.consignmentDetails.length)}
                         <p><strong>From:</strong> {travel.pickup}</p>
                         <p><strong>To:</strong> {travel.drop}</p>
                         <p><strong>Vehicle:</strong> {travel.travelMode} ({travel.travelmode_number})</p>
                         <p><strong>Scheduled:</strong> {new Date(travel.expectedStartTime).toLocaleString()} - {new Date(travel.expectedendtime).toLocaleString()}</p>
-                        <p><strong>Consignments:</strong> {travel.consignmentCount}</p>
+                        <p><strong>Consignments:</strong> {travel.consignmentDetails.length}</p>
                       </div>
                       {travel.consignmentDetails && travel.consignmentDetails.length > 0 && (
                         <div className={styles.consignments}>
