@@ -8,17 +8,37 @@ const ConsignmentConsolidatedReport = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [recordsPerPage, setRecordsPerPage] = useState(100);
 
   useEffect(() => {
     fetchConsignmentData();
-  }, []);
+  }, [currentPage]);
 
   const fetchConsignmentData = async () => {
     try {
       setLoading(true);
-      const data = await getConsignmentConsolidatedReport();
-      console.log('Consignment consolidated data received:', data);
-      setConsignments(Array.isArray(data) ? data : []);
+      const response = await getConsignmentConsolidatedReport(currentPage, recordsPerPage);
+      console.log('Consignment consolidated data received:', response);
+      
+      // Handle the pagination structure
+      if (response.data && Array.isArray(response.data)) {
+        setConsignments(response.data);
+      } else if (Array.isArray(response)) {
+        setConsignments(response);
+      } else {
+        setConsignments([]);
+      }
+      
+      // Set pagination info if available
+      if (response.pagination) {
+        setTotalPages(response.pagination.totalPages || 1);
+        setTotalRecords(response.pagination.totalRecords || 0);
+        setRecordsPerPage(response.pagination.recordsPerPage || 100);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch consignment data');
@@ -33,7 +53,9 @@ const ConsignmentConsolidatedReport = () => {
       consignment.consignmentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       consignment.senderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       consignment.travelerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.recepientName?.toLowerCase().includes(searchTerm.toLowerCase());
+      consignment.recepientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consignment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consignment.category?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || consignment.consignmentStatus === filterStatus;
     
@@ -57,15 +79,28 @@ const ConsignmentConsolidatedReport = () => {
       'Traveler Address',
       'Amount to be paid to Traveler',
       'Traveler Payment Status',
+      'Traveler Total Earnings',
       'Travel Mode',
       'Travel Start Date',
       'Travel End Date',
-      'Recepient Name',
-      'Recepient Address',
-      'Recepient Phone no',
+      'Recipient Name',
+      'Recipient Address',
+      'Recipient Phone No',
       'Received Date',
       'T&E Amount',
-      'Tax Component'
+      'Tax Component',
+      'Weight',
+      'Category',
+      'Subcategory',
+      'Description',
+      'Dimensions',
+      'Distance',
+      'Duration',
+      'Handle With Care',
+      'Special Request',
+      'Date of Sending',
+      'Created At',
+      'Updated At'
     ];
 
     const csvContent = [
@@ -86,6 +121,7 @@ const ConsignmentConsolidatedReport = () => {
         `"${consignment.travelerAddress || ''}"`,
         consignment.amountToBePaidToTraveler || '',
         consignment.travelerPaymentStatus || '',
+        consignment.travelerTotalEarnings || '',
         consignment.travelMode || '',
         consignment.travelStartDate || '',
         consignment.travelEndDate || '',
@@ -94,7 +130,19 @@ const ConsignmentConsolidatedReport = () => {
         consignment.recepientPhoneNo || '',
         consignment.receivedDate || '',
         consignment.tneAmount || '',
-        consignment.taxComponent || ''
+        consignment.taxComponent || '',
+        consignment.weight || '',
+        consignment.category || '',
+        consignment.subcategory || '',
+        `"${consignment.description || ''}"`,
+        consignment.dimensions || '',
+        consignment.distance || '',
+        consignment.duration || '',
+        consignment.handleWithCare ? 'Yes' : 'No',
+        `"${consignment.specialRequest || ''}"`,
+        consignment.dateOfSending || '',
+        consignment.createdAt || '',
+        consignment.updatedAt || ''
       ].join(','))
     ].join('\n');
 
@@ -107,6 +155,10 @@ const ConsignmentConsolidatedReport = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
   };
 
   if (loading) {
@@ -134,7 +186,7 @@ const ConsignmentConsolidatedReport = () => {
           <div className="search-filter-container">
             <input
               type="text"
-              placeholder="Search by ID, names..."
+              placeholder="Search by ID, names, description, category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -149,12 +201,30 @@ const ConsignmentConsolidatedReport = () => {
               <option value="Accepted">Accepted</option>
               <option value="In Progress">In Progress</option>
               <option value="Completed">Completed</option>
-              <option value="Rejected">Rejected</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+              <option value="Returned">Returned</option>
+              <option value="Lost">Lost</option>
             </select>
           </div>
           <button onClick={exportToCSV} className="export-btn">
             Export to CSV
           </button>
+        </div>
+      </div>
+
+      <div className="summary-stats">
+        <div className="stat-card">
+          <h3>Total Records</h3>
+          <p>{totalRecords}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Current Page</h3>
+          <p>{currentPage} of {totalPages}</p>
+        </div>
+        <div className="stat-card">
+          <h3>Records Per Page</h3>
+          <p>{recordsPerPage}</p>
         </div>
       </div>
 
@@ -164,80 +234,137 @@ const ConsignmentConsolidatedReport = () => {
             <tr>
               <th>Consignment ID</th>
               <th>Status</th>
-              <th>Sender ID</th>
-              <th>Sender Name</th>
-              <th>Sender Mobile</th>
-              <th>Sender Address</th>
-              <th>Total Amount</th>
-              <th>Payment Status</th>
-              <th>Traveler ID</th>
-              <th>Acceptance Date</th>
-              <th>Traveler Name</th>
-              <th>Traveler Mobile</th>
-              <th>Traveler Address</th>
-              <th>Amount to Traveler</th>
-              <th>Traveler Payment</th>
-              <th>Travel Mode</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Recipient Name</th>
-              <th>Recipient Address</th>
-              <th>Recipient Phone</th>
-              <th>Received Date</th>
-              <th>T&E Amount</th>
-              <th>Tax Component</th>
+              <th>Sender Info</th>
+              <th>Amount & Payment</th>
+              <th>Traveler Info</th>
+              <th>Travel Details</th>
+              <th>Recipient Info</th>
+              <th>Financial Details</th>
+              <th>Consignment Details</th>
+              <th>Dates</th>
             </tr>
           </thead>
           <tbody>
             {filteredConsignments.length === 0 ? (
               <tr>
-                <td colSpan="25" className="no-data">No consignment data available</td>
+                <td colSpan="10" className="no-data">No consignment data available</td>
               </tr>
             ) : (
               filteredConsignments.map((consignment, index) => (
                 <tr key={consignment.consignmentId || index}>
-                  <td>{consignment.consignmentId || 'N/A'}</td>
                   <td>
-                    <span className={`status ${consignment.consignmentStatus?.toLowerCase() || 'unknown'}`}>
-                      {consignment.consignmentStatus || 'N/A'}
-                    </span>
+                    <div className="consignment-id">{consignment.consignmentId || 'N/A'}</div>
+                    <div className="status-badge">
+                      <span className={`status ${consignment.consignmentStatus?.toLowerCase() || 'unknown'}`}>
+                        {consignment.consignmentStatus || 'N/A'}
+                      </span>
+                    </div>
                   </td>
-                  <td>{consignment.senderId || 'N/A'}</td>
-                  <td>{consignment.senderName || 'N/A'}</td>
-                  <td>{consignment.senderMobileNo || 'N/A'}</td>
-                  <td className="address-cell">{consignment.senderAddress || 'N/A'}</td>
-                  <td>₹{Number(consignment.totalAmountSender || 0).toFixed(2)}</td>
                   <td>
-                    <span className={`payment ${consignment.paymentStatus?.toLowerCase() || 'unknown'}`}>
-                      {consignment.paymentStatus || 'N/A'}
-                    </span>
+                    <div className="sender-info">
+                      <div><strong>ID:</strong> {consignment.senderId || 'N/A'}</div>
+                      <div><strong>Name:</strong> {consignment.senderName || 'N/A'}</div>
+                      <div><strong>Mobile:</strong> {consignment.senderMobileNo || 'N/A'}</div>
+                      <div><strong>Address:</strong> {consignment.senderAddress || 'N/A'}</div>
+                    </div>
                   </td>
-                  <td>{consignment.travelerId || 'N/A'}</td>
-                  <td>{consignment.travelerAcceptanceDate || 'N/A'}</td>
-                  <td>{consignment.travelerName || 'N/A'}</td>
-                  <td>{consignment.travelerMobileNo || 'N/A'}</td>
-                  <td className="address-cell">{consignment.travelerAddress || 'N/A'}</td>
-                  <td>₹{Number(consignment.amountToBePaidToTraveler || 0).toFixed(2)}</td>
                   <td>
-                    <span className={`payment ${consignment.travelerPaymentStatus?.toLowerCase() || 'unknown'}`}>
-                      {consignment.travelerPaymentStatus || 'N/A'}
-                    </span>
+                    <div className="amount-info">
+                      <div><strong>Total Amount:</strong> ₹{Number(consignment.totalAmountSender || 0).toFixed(2)}</div>
+                      <div><strong>Payment Status:</strong> 
+                        <span className={`payment ${consignment.paymentStatus?.toLowerCase() || 'unknown'}`}>
+                          {consignment.paymentStatus || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
                   </td>
-                  <td>{consignment.travelMode || 'N/A'}</td>
-                  <td>{consignment.travelStartDate || 'N/A'}</td>
-                  <td>{consignment.travelEndDate || 'N/A'}</td>
-                  <td>{consignment.recepientName || 'N/A'}</td>
-                  <td className="address-cell">{consignment.recepientAddress || 'N/A'}</td>
-                  <td>{consignment.recepientPhoneNo || 'N/A'}</td>
-                  <td>{consignment.receivedDate || 'N/A'}</td>
-                  <td>₹{Number(consignment.tneAmount || 0).toFixed(2)}</td>
-                  <td>₹{Number(consignment.taxComponent || 0).toFixed(2)}</td>
+                  <td>
+                    <div className="traveler-info">
+                      <div><strong>ID:</strong> {consignment.travelerId || 'N/A'}</div>
+                      <div><strong>Name:</strong> {consignment.travelerName || 'N/A'}</div>
+                      <div><strong>Mobile:</strong> {consignment.travelerMobileNo || 'N/A'}</div>
+                      <div><strong>Address:</strong> {consignment.travelerAddress || 'N/A'}</div>
+                      <div><strong>Acceptance Date:</strong> {consignment.travelerAcceptanceDate || 'N/A'}</div>
+                      <div><strong>Total Earnings:</strong> ₹{Number(consignment.travelerTotalEarnings || 0).toFixed(2)}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="travel-details">
+                      <div><strong>Mode:</strong> {consignment.travelMode || 'N/A'}</div>
+                      <div><strong>Start Date:</strong> {consignment.travelStartDate || 'N/A'}</div>
+                      <div><strong>End Date:</strong> {consignment.travelEndDate || 'N/A'}</div>
+                      <div><strong>Amount to Traveler:</strong> ₹{Number(consignment.amountToBePaidToTraveler || 0).toFixed(2)}</div>
+                      <div><strong>Traveler Payment:</strong> 
+                        <span className={`payment ${consignment.travelerPaymentStatus?.toLowerCase() || 'unknown'}`}>
+                          {consignment.travelerPaymentStatus || 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="recipient-info">
+                      <div><strong>Name:</strong> {consignment.recepientName || 'N/A'}</div>
+                      <div><strong>Address:</strong> {consignment.recepientAddress || 'N/A'}</div>
+                      <div><strong>Phone:</strong> {consignment.recepientPhoneNo || 'N/A'}</div>
+                      <div><strong>Received Date:</strong> {consignment.receivedDate || 'N/A'}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="financial-details">
+                      <div><strong>T&E Amount:</strong> ₹{Number(consignment.tneAmount || 0).toFixed(2)}</div>
+                      <div><strong>Tax Component:</strong> ₹{Number(consignment.taxComponent || 0).toFixed(2)}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="consignment-details">
+                      <div><strong>Weight:</strong> {consignment.weight || 'N/A'} kg</div>
+                      <div><strong>Category:</strong> {consignment.category || 'N/A'}</div>
+                      <div><strong>Subcategory:</strong> {consignment.subcategory || 'N/A'}</div>
+                      <div><strong>Description:</strong> {consignment.description || 'N/A'}</div>
+                      <div><strong>Dimensions:</strong> {consignment.dimensions || 'N/A'}</div>
+                      <div><strong>Distance:</strong> {consignment.distance || 'N/A'} km</div>
+                      <div><strong>Duration:</strong> {consignment.duration || 'N/A'} hrs</div>
+                      <div><strong>Handle With Care:</strong> {consignment.handleWithCare ? 'Yes' : 'No'}</div>
+                      {consignment.specialRequest && (
+                        <div><strong>Special Request:</strong> {consignment.specialRequest}</div>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="dates-info">
+                      <div><strong>Date of Sending:</strong> {consignment.dateOfSending || 'N/A'}</div>
+                      <div><strong>Created:</strong> {consignment.createdAt || 'N/A'}</div>
+                      <div><strong>Updated:</strong> {consignment.updatedAt || 'N/A'}</div>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            onClick={() => handlePageChange(currentPage - 1)} 
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            Previous
+          </button>
+          <span className="page-info">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            onClick={() => handlePageChange(currentPage + 1)} 
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
