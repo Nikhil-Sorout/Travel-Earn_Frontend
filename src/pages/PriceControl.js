@@ -6,18 +6,14 @@ import api from '../Services/Api'; // assuming Axios instance
 const PriceControl = () => {
   const [pricing, setPricing] = useState({
     TE: 0,
-    DeliveryFee: 0,
-    Margin: 0,
-    WeightRateTrain: 0,
-    WeightRateCar: 0,
-    WeightRateAirplane: 0,
-    DistanceRateAirplane: 0,
-    DistanceRateTrainBase: 0,
-    DistanceRateCarBase: 0,
-    DistanceRateTrainMid: 0,
-    DistanceRateCarMid: 0,
-    DistanceRateTrainHigh: 0,
-    DistanceRateCarHigh: 0
+    deliveryFee: 0,
+    margin: 0,
+    weightRateTrain: 0,
+    weightRateAirplane: 0,
+    distanceRateTrain: 0,
+    distanceRateAirplane: 0,
+    baseFareTrain: 0,
+    baseFareAirplane: 0,
   });
   const [modalInputs, setModalInputs] = useState({ ...pricing });
   const [status, setStatus] = useState('');
@@ -36,19 +32,15 @@ const PriceControl = () => {
         const config = response.data;
         
         const newPricing = {
-          TE: config.TE,
-          DeliveryFee: config.deliveryFee,
-          Margin: config.margin,
-          WeightRateTrain: config.weightRateTrain,
-          WeightRateCar: config.weightRateTrain,
-          WeightRateAirplane: config.weightRateAirplane,
-          DistanceRateAirplane: config.distanceRateAirplane,
-          DistanceRateTrainBase: config.distanceRateTrain.base,
-          DistanceRateCarBase: config.distanceRateTrain.base,
-          DistanceRateTrainMid: config.distanceRateTrain.mid,
-          DistanceRateCarMid: config.distanceRateTrain.mid,
-          DistanceRateTrainHigh: config.distanceRateTrain.high,
-          DistanceRateCarHigh: config.distanceRateTrain.high
+          TE: config.TE || 112,
+          deliveryFee: config.deliveryFee || 0,
+          margin: config.margin || 0.2,
+          weightRateTrain: config.weightRateTrain || 100,
+          weightRateAirplane: config.weightRateAirplane || 200,
+          distanceRateTrain: config.distanceRateTrain || 0,
+          distanceRateAirplane: config.distanceRateAirplane || 0.2,
+          baseFareTrain: config.baseFareTrain || 0,
+          baseFareAirplane: config.baseFareAirplane || 0,
         };
         
         setPricing(newPricing);
@@ -66,20 +58,10 @@ const PriceControl = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (value >= 0) {
-      const newModalInputs = { ...modalInputs, [name]: value };
-      
-      // Sync car values with train values
-      if (name === 'WeightRateTrain') {
-        newModalInputs.WeightRateCar = value;
-      } else if (name === 'DistanceRateTrainBase') {
-        newModalInputs.DistanceRateCarBase = value;
-      } else if (name === 'DistanceRateTrainMid') {
-        newModalInputs.DistanceRateCarMid = value;
-      } else if (name === 'DistanceRateTrainHigh') {
-        newModalInputs.DistanceRateCarHigh = value;
-      }
-      
-      setModalInputs(newModalInputs);
+      setModalInputs(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
   };
 
@@ -89,16 +71,14 @@ const PriceControl = () => {
   
     const payload = {
       TE: parseFloat(modalInputs.TE),
-      deliveryFee: parseFloat(modalInputs.DeliveryFee),
-      margin: parseFloat(modalInputs.Margin),
-      weightRateTrain: parseFloat(modalInputs.WeightRateTrain),
-      weightRateAirplane: parseFloat(modalInputs.WeightRateAirplane),
-      distanceRateAirplane: parseFloat(modalInputs.DistanceRateAirplane),
-      distanceRateTrain: {
-        base: parseFloat(modalInputs.DistanceRateTrainBase),
-        mid: parseFloat(modalInputs.DistanceRateTrainMid),
-        high: parseFloat(modalInputs.DistanceRateTrainHigh)
-      }
+      deliveryFee: parseFloat(modalInputs.deliveryFee),
+      margin: parseFloat(modalInputs.margin),
+      weightRateTrain: parseFloat(modalInputs.weightRateTrain),
+      weightRateAirplane: parseFloat(modalInputs.weightRateAirplane),
+      distanceRateTrain: parseFloat(modalInputs.distanceRateTrain),
+      distanceRateAirplane: parseFloat(modalInputs.distanceRateAirplane),
+      baseFareTrain: parseFloat(modalInputs.baseFareTrain),
+      baseFareAirplane: parseFloat(modalInputs.baseFareAirplane),
     };
   
     try {
@@ -127,6 +107,21 @@ const PriceControl = () => {
     setModalInputs(pricing);
   };
 
+  // Helper function to format field names for display
+  const formatFieldName = (key) => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .replace('T E', 'TE')
+      .replace('Delivery Fee', 'Delivery Fee')
+      .replace('Weight Rate Train', 'Weight Rate (Train)')
+      .replace('Weight Rate Airplane', 'Weight Rate (Airplane)')
+      .replace('Distance Rate Train', 'Distance Rate (Train)')
+      .replace('Distance Rate Airplane', 'Distance Rate (Airplane)')
+      .replace('Base Fare Train', 'Base Fare (Train)')
+      .replace('Base Fare Airplane', 'Base Fare (Airplane)');
+  };
+
   return (
     <div className={styles.adminWrapper}>
       <Sidebar />
@@ -139,8 +134,10 @@ const PriceControl = () => {
           <div className={styles.pricingGrid}>
             {Object.entries(pricing).map(([key, value]) => (
               <div key={key} className={styles.pricingItem}>
-                <span className={styles.pricingLabel}>{key.replace(/([A-Z])/g, ' $1')}</span>
-                <span className={styles.pricingValue}>₹ {parseFloat(value).toFixed(2)}</span>
+                <span className={styles.pricingLabel}>{formatFieldName(key)}</span>
+                <span className={styles.pricingValue}>
+                  {key === 'margin' ? `${(parseFloat(value) * 100).toFixed(1)}%` : parseFloat(value).toFixed(2)}
+                </span>
               </div>
             ))}
           </div>
@@ -157,7 +154,7 @@ const PriceControl = () => {
               <form onSubmit={handleSubmit} className={styles.formGrid}>
                 {Object.entries(modalInputs).map(([key, value]) => (
                   <div key={key} className={styles.formGroup}>
-                    <label htmlFor={key}>{key.replace(/([A-Z])/g, ' $1')}</label>
+                    <label htmlFor={key}>{formatFieldName(key)}</label>
                     <input
                       type="number"
                       id={key}
@@ -165,10 +162,10 @@ const PriceControl = () => {
                       value={value}
                       onChange={handleChange}
                       min="0"
-                      step="0.01"
+                      step={key === 'margin' ? "0.01" : "0.01"}
                       required
-                      disabled={key.includes('Car')}
                     />
+                    {key === 'margin' && <small>Enter as decimal (e.g., 0.2 for 20%)</small>}
                   </div>
                 ))}
                 <button type="submit">Update Pricing</button>
