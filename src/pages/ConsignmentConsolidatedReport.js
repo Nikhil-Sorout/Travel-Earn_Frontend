@@ -22,6 +22,18 @@ const ConsignmentConsolidatedReport = () => {
       setLoading(true);
       const response = await getConsignmentConsolidatedReport(currentPage, recordsPerPage);
       console.log('Consignment consolidated data received:', response);
+      console.log('Response structure:', {
+        hasData: !!response.data,
+        dataLength: response.data?.length,
+        isArray: Array.isArray(response),
+        responseKeys: Object.keys(response || {})
+      });
+      
+      // Log first record if available
+      if (response.data && response.data.length > 0) {
+        console.log('First record sample:', response.data[0]);
+        console.log('First record keys:', Object.keys(response.data[0]));
+      }
       
       // Handle the pagination structure
       if (response.data && Array.isArray(response.data)) {
@@ -50,14 +62,12 @@ const ConsignmentConsolidatedReport = () => {
 
   const filteredConsignments = consignments.filter(consignment => {
     const matchesSearch = 
-      consignment.consignmentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.senderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.travelerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.recepientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      consignment.category?.toLowerCase().includes(searchTerm.toLowerCase());
+      consignment['Consignment ID']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consignment['Sender Name']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consignment['Traveler Name']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      consignment['Recipient Name']?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || consignment.consignmentStatus === filterStatus;
+    const matchesStatus = filterStatus === 'all' || consignment['Consignment Status'] === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
@@ -79,70 +89,44 @@ const ConsignmentConsolidatedReport = () => {
       'Traveler Address',
       'Amount to be paid to Traveler',
       'Traveler Payment Status',
-      'Traveler Total Earnings',
       'Travel Mode',
       'Travel Start Date',
       'Travel End Date',
       'Recipient Name',
       'Recipient Address',
-      'Recipient Phone No',
+      'Recipient Phone no',
       'Received Date',
       'T&E Amount',
-      'Tax Component',
-      'Weight',
-      'Category',
-      'Subcategory',
-      'Description',
-      'Dimensions',
-      'Distance',
-      'Duration',
-      'Handle With Care',
-      'Special Request',
-      'Date of Sending',
-      'Created At',
-      'Updated At'
+      'Tax Component'
     ];
 
     const csvContent = [
       headers.join(','),
       ...filteredConsignments.map(consignment => [
-        consignment.consignmentId || '',
-        consignment.consignmentStatus || '',
-        consignment.senderId || '',
-        `"${consignment.senderName || ''}"`,
-        consignment.senderMobileNo || '',
-        `"${consignment.senderAddress || ''}"`,
-        consignment.totalAmountSender || '',
-        consignment.paymentStatus || '',
-        consignment.travelerId || '',
-        consignment.travelerAcceptanceDate || '',
-        `"${consignment.travelerName || ''}"`,
-        consignment.travelerMobileNo || '',
-        `"${consignment.travelerAddress || ''}"`,
-        consignment.amountToBePaidToTraveler || '',
-        consignment.travelerPaymentStatus || '',
-        consignment.travelerTotalEarnings || '',
-        consignment.travelMode || '',
-        consignment.travelStartDate || '',
-        consignment.travelEndDate || '',
-        `"${consignment.recepientName || ''}"`,
-        `"${consignment.recepientAddress || ''}"`,
-        consignment.recepientPhoneNo || '',
-        consignment.receivedDate || '',
-        consignment.tneAmount || '',
-        consignment.taxComponent || '',
-        consignment.weight || '',
-        consignment.category || '',
-        consignment.subcategory || '',
-        `"${consignment.description || ''}"`,
-        consignment.dimensions || '',
-        consignment.distance || '',
-        consignment.duration || '',
-        consignment.handleWithCare ? 'Yes' : 'No',
-        `"${consignment.specialRequest || ''}"`,
-        consignment.dateOfSending || '',
-        consignment.createdAt || '',
-        consignment.updatedAt || ''
+        consignment['Consignment ID'] || '',
+        consignment['Consignment Status'] || '',
+        consignment['Sender ID'] || '',
+        `"${consignment['Sender Name'] || ''}"`,
+        consignment['Sender Mobile No'] || '',
+        `"${consignment['Sender Address'] || ''}"`,
+        consignment['Total Amount Sender'] || '',
+        consignment['Payment Status'] || '',
+        consignment['Traveler Id'] || '',
+        formatDate(consignment['Traveler Acceptance Date']) || '',
+        `"${consignment['Traveler Name'] || ''}"`,
+        consignment['Traveler Mobile No'] || '',
+        `"${consignment['Traveler Address'] || ''}"`,
+        consignment['Amount to be paid to Traveler'] || '',
+        consignment['Traveler Payment Status'] || '',
+        consignment['Travel Mode'] || '',
+        formatDate(consignment['Travel Start Date']) || '',
+        formatDate(consignment['Travel End Date']) || '',
+        `"${consignment['Recipient Name'] || ''}"`,
+        `"${consignment['Recipient Address'] || ''}"`,
+        consignment['Recipient Phone no'] || '',
+        formatDate(consignment['Received Date']) || '',
+        consignment['T&E Amount'] || '',
+        consignment['Tax Component'] || ''
       ].join(','))
     ].join('\n');
 
@@ -159,6 +143,28 @@ const ConsignmentConsolidatedReport = () => {
 
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
+  };
+
+  // Format date to local timezone
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      
+      return date.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    } catch (error) {
+      return 'N/A';
+    }
   };
 
   if (loading) {
@@ -184,13 +190,13 @@ const ConsignmentConsolidatedReport = () => {
         <h1>Consignment Consolidated Report</h1>
         <div className="header-controls">
           <div className="search-filter-container">
-            <input
-              type="text"
-              placeholder="Search by ID, names, description, category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
+                         <input
+               type="text"
+               placeholder="Search by Consignment ID, Sender Name, Traveler Name, Recipient Name..."
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="search-input"
+             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -229,119 +235,111 @@ const ConsignmentConsolidatedReport = () => {
       </div>
 
       <div className="table-container">
-        <table className="consignment-table">
-          <thead>
-            <tr>
-              <th>Consignment ID</th>
-              <th>Status</th>
-              <th>Sender Info</th>
-              <th>Amount & Payment</th>
-              <th>Traveler Info</th>
-              <th>Travel Details</th>
-              <th>Recipient Info</th>
-              <th>Financial Details</th>
-              <th>Consignment Details</th>
-              <th>Dates</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredConsignments.length === 0 ? (
+        <div className="table-wrapper">
+          <table className="consignment-table">
+            <thead>
               <tr>
-                <td colSpan="10" className="no-data">No consignment data available</td>
+                <th>Consignment ID</th>
+                <th>Consignment Status</th>
+                <th>Sender ID</th>
+                <th>Sender Name</th>
+                <th>Sender Mobile No</th>
+                <th>Sender Address</th>
+                <th>Total Amount Sender</th>
+                <th>Payment Status</th>
+                <th>Traveler Id</th>
+                <th>Traveler Acceptance Date</th>
+                <th>Traveler Name</th>
+                <th>Traveler Mobile No</th>
+                <th>Traveler Address</th>
+                <th>Amount to be paid to Traveler</th>
+                <th>Traveler Payment Status</th>
+                <th>Travel Mode</th>
+                <th>Travel Start Date</th>
+                <th>Travel End Date</th>
+                <th>Recipient Name</th>
+                <th>Recipient Address</th>
+                <th>Recipient Phone no</th>
+                <th>Received Date</th>
+                <th>T&E Amount</th>
+                <th>Tax Component</th>
               </tr>
-            ) : (
-              filteredConsignments.map((consignment, index) => (
-                <tr key={consignment.consignmentId || index}>
-                  <td>
-                    <div className="consignment-id">{consignment.consignmentId || 'N/A'}</div>
-                    <div className="status-badge">
-                      <span className={`status ${consignment.consignmentStatus?.toLowerCase() || 'unknown'}`}>
-                        {consignment.consignmentStatus || 'N/A'}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="sender-info">
-                      <div><strong>ID:</strong> {consignment.senderId || 'N/A'}</div>
-                      <div><strong>Name:</strong> {consignment.senderName || 'N/A'}</div>
-                      <div><strong>Mobile:</strong> {consignment.senderMobileNo || 'N/A'}</div>
-                      <div><strong>Address:</strong> {consignment.senderAddress || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="amount-info">
-                      <div><strong>Total Amount:</strong> ₹{Number(consignment.totalAmountSender || 0).toFixed(2)}</div>
-                      <div><strong>Payment Status:</strong> 
-                        <span className={`payment ${consignment.paymentStatus?.toLowerCase() || 'unknown'}`}>
-                          {consignment.paymentStatus || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="traveler-info">
-                      <div><strong>ID:</strong> {consignment.travelerId || 'N/A'}</div>
-                      <div><strong>Name:</strong> {consignment.travelerName || 'N/A'}</div>
-                      <div><strong>Mobile:</strong> {consignment.travelerMobileNo || 'N/A'}</div>
-                      <div><strong>Address:</strong> {consignment.travelerAddress || 'N/A'}</div>
-                      <div><strong>Acceptance Date:</strong> {consignment.travelerAcceptanceDate || 'N/A'}</div>
-                      <div><strong>Total Earnings:</strong> ₹{Number(consignment.travelerTotalEarnings || 0).toFixed(2)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="travel-details">
-                      <div><strong>Mode:</strong> {consignment.travelMode || 'N/A'}</div>
-                      <div><strong>Start Date:</strong> {consignment.travelStartDate || 'N/A'}</div>
-                      <div><strong>End Date:</strong> {consignment.travelEndDate || 'N/A'}</div>
-                      <div><strong>Amount to Traveler:</strong> ₹{Number(consignment.amountToBePaidToTraveler || 0).toFixed(2)}</div>
-                      <div><strong>Traveler Payment:</strong> 
-                        <span className={`payment ${consignment.travelerPaymentStatus?.toLowerCase() || 'unknown'}`}>
-                          {consignment.travelerPaymentStatus || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="recipient-info">
-                      <div><strong>Name:</strong> {consignment.recepientName || 'N/A'}</div>
-                      <div><strong>Address:</strong> {consignment.recepientAddress || 'N/A'}</div>
-                      <div><strong>Phone:</strong> {consignment.recepientPhoneNo || 'N/A'}</div>
-                      <div><strong>Received Date:</strong> {consignment.receivedDate || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="financial-details">
-                      <div><strong>T&E Amount:</strong> ₹{Number(consignment.tneAmount || 0).toFixed(2)}</div>
-                      <div><strong>Tax Component:</strong> ₹{Number(consignment.taxComponent || 0).toFixed(2)}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="consignment-details">
-                      <div><strong>Weight:</strong> {consignment.weight || 'N/A'} kg</div>
-                      <div><strong>Category:</strong> {consignment.category || 'N/A'}</div>
-                      <div><strong>Subcategory:</strong> {consignment.subcategory || 'N/A'}</div>
-                      <div><strong>Description:</strong> {consignment.description || 'N/A'}</div>
-                      <div><strong>Dimensions:</strong> {consignment.dimensions || 'N/A'}</div>
-                      <div><strong>Distance:</strong> {consignment.distance || 'N/A'} km</div>
-                      <div><strong>Duration:</strong> {consignment.duration || 'N/A'} hrs</div>
-                      <div><strong>Handle With Care:</strong> {consignment.handleWithCare ? 'Yes' : 'No'}</div>
-                      {consignment.specialRequest && (
-                        <div><strong>Special Request:</strong> {consignment.specialRequest}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="dates-info">
-                      <div><strong>Date of Sending:</strong> {consignment.dateOfSending || 'N/A'}</div>
-                      <div><strong>Created:</strong> {consignment.createdAt || 'N/A'}</div>
-                      <div><strong>Updated:</strong> {consignment.updatedAt || 'N/A'}</div>
-                    </div>
-                  </td>
+            </thead>
+            <tbody>
+              {filteredConsignments.length === 0 ? (
+                <tr>
+                  <td colSpan="24" className="no-data">No consignment data available</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredConsignments.map((consignment, index) => (
+                  <tr key={consignment['Consignment ID'] || index}>
+                    <td title={consignment['Consignment ID'] || 'N/A'}>{consignment['Consignment ID'] || 'N/A'}</td>
+                    <td>
+                      <span 
+                        className={`status ${consignment['Consignment Status']?.toLowerCase() || 'unknown'}`}
+                        title={consignment['Consignment Status'] || 'N/A'}
+                      >
+                        {consignment['Consignment Status'] || 'N/A'}
+                      </span>
+                    </td>
+                    <td title={consignment['Sender ID'] || 'N/A'}>{consignment['Sender ID'] || 'N/A'}</td>
+                    <td title={consignment['Sender Name'] || 'N/A'}>{consignment['Sender Name'] || 'N/A'}</td>
+                    <td title={consignment['Sender Mobile No'] || 'N/A'}>{consignment['Sender Mobile No'] || 'N/A'}</td>
+                    <td title={consignment['Sender Address'] || 'N/A'}>{consignment['Sender Address'] || 'N/A'}</td>
+                    <td title={`₹${Number(consignment['Total Amount Sender'] || 0).toFixed(2)}`}>
+                      ₹{Number(consignment['Total Amount Sender'] || 0).toFixed(2)}
+                    </td>
+                    <td>
+                      <span 
+                        className={`payment ${consignment['Payment Status']?.toLowerCase() || 'unknown'}`}
+                        title={consignment['Payment Status'] || 'N/A'}
+                      >
+                        {consignment['Payment Status'] || 'N/A'}
+                      </span>
+                    </td>
+                    <td title={consignment['Traveler Id'] || 'N/A'}>{consignment['Traveler Id'] || 'N/A'}</td>
+                    <td title={formatDate(consignment['Traveler Acceptance Date'])}>
+                      {formatDate(consignment['Traveler Acceptance Date'])}
+                    </td>
+                    <td title={consignment['Traveler Name'] || 'N/A'}>{consignment['Traveler Name'] || 'N/A'}</td>
+                    <td title={consignment['Traveler Mobile No'] || 'N/A'}>{consignment['Traveler Mobile No'] || 'N/A'}</td>
+                    <td title={consignment['Traveler Address'] || 'N/A'}>{consignment['Traveler Address'] || 'N/A'}</td>
+                    <td title={`₹${Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}`}>
+                      ₹{Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}
+                    </td>
+                    <td>
+                      <span 
+                        className={`payment ${consignment['Traveler Payment Status']?.toLowerCase() || 'unknown'}`}
+                        title={consignment['Traveler Payment Status'] || 'N/A'}
+                      >
+                        {consignment['Traveler Payment Status'] || 'N/A'}
+                      </span>
+                    </td>
+                    <td title={consignment['Travel Mode'] || 'N/A'}>{consignment['Travel Mode'] || 'N/A'}</td>
+                    <td title={formatDate(consignment['Travel Start Date'])}>
+                      {formatDate(consignment['Travel Start Date'])}
+                    </td>
+                    <td title={formatDate(consignment['Travel End Date'])}>
+                      {formatDate(consignment['Travel End Date'])}
+                    </td>
+                    <td title={consignment['Recipient Name'] || 'N/A'}>{consignment['Recipient Name'] || 'N/A'}</td>
+                    <td title={consignment['Recipient Address'] || 'N/A'}>{consignment['Recipient Address'] || 'N/A'}</td>
+                    <td title={consignment['Recipient Phone no'] || 'N/A'}>{consignment['Recipient Phone no'] || 'N/A'}</td>
+                    <td title={formatDate(consignment['Received Date'])}>
+                      {formatDate(consignment['Received Date'])}
+                    </td>
+                    <td title={`₹${Number(consignment['T&E Amount'] || 0).toFixed(2)}`}>
+                      ₹{Number(consignment['T&E Amount'] || 0).toFixed(2)}
+                    </td>
+                    <td title={`₹${Number(consignment['Tax Component'] || 0).toFixed(2)}`}>
+                      ₹{Number(consignment['Tax Component'] || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {totalPages > 1 && (

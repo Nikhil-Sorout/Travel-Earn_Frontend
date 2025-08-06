@@ -19,8 +19,43 @@ const TravelerReport = () => {
   const fetchTravelerData = async () => {
     try {
       setLoading(true);
-      const data = await getTravelerReport();
-      console.log('Traveler data received:', data);
+      const response = await getTravelerReport();
+      console.log('Traveler data received:', response);
+      // Handle the backend response structure with data and pagination
+      const data = response.data || response;
+      console.log('Processed data:', data);
+      console.log('Data type:', typeof data);
+      console.log('Is array:', Array.isArray(data));
+      
+      if (Array.isArray(data) && data.length > 0) {
+        console.log('First traveler record keys:', Object.keys(data[0]));
+        console.log('Name field value:', data[0]['Name']);
+        console.log('Sample traveler record:', {
+          travelerId: data[0]['Traveler Id'],
+          name: data[0]['Name'],
+          phoneNo: data[0]['Phone No'],
+          address: data[0]['Address'],
+          totalAmount: data[0]['Total Amount'],
+          status: data[0]['Status of Consignment'],
+          payment: data[0]['Payment'],
+          consignment: data[0]['Traveler\'s Consignment'],
+          // Additional debugging for address and amount issues
+          rawAddress: data[0]['Address'],
+          rawAmount: data[0]['Total Amount'],
+          amountType: typeof data[0]['Total Amount']
+        });
+        
+        // Check if address contains only "to" or similar empty concatenation
+        if (data[0]['Address'] && (data[0]['Address'].trim() === 'to' || data[0]['Address'].trim() === ' to ' || data[0]['Address'].includes('undefined'))) {
+          console.warn('⚠️ Address field contains empty concatenation:', data[0]['Address']);
+        }
+        
+        // Check if amount is 0
+        if (data[0]['Total Amount'] === 0 || data[0]['Total Amount'] === '0') {
+          console.warn('⚠️ Total Amount is 0 for traveler:', data[0]['Traveler Id']);
+        }
+      }
+      
       setTravelers(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
@@ -44,75 +79,82 @@ const TravelerReport = () => {
   };
 
   const filteredTravelers = travelers.filter(traveler => {
-    const matchesSearch = 
-      traveler.travelerId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler.travelerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler.phoneNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler.leavingLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler.goingLocation?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Get the name value using backend-specific logic
+    const nameValue = traveler['Name'] || traveler.username || traveler.sender || '';
     
-    const matchesStatus = filterStatus === 'all' || traveler.status === filterStatus;
+    // Clean up address for search
+    const cleanAddress = (() => {
+      const address = traveler['Address'] || '';
+      if (!address || 
+          address.trim() === 'to' || 
+          address.trim() === ' to ' || 
+          address.includes('undefined') ||
+          address.trim() === 'null to null' ||
+          address.trim() === ' to') {
+        return '';
+      }
+      return address;
+    })();
+    
+    const matchesSearch = 
+      traveler['Traveler Id']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      nameValue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      traveler['Phone No']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cleanAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      traveler['State']?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || traveler['Status of Consignment'] === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
 
   const exportToCSV = () => {
     const headers = [
-      'Travel ID',
-      'Traveler ID',
-      'Traveler Name',
+      'Traveler Id',
+      'Name',
       'Phone No',
-      'Email',
       'Address',
-      'Leaving Location',
-      'Going Location',
-      'Travel Mode',
-      'Vehicle Type',
-      'Vehicle Number',
-      'Travel Date',
-      'Distance',
-      'Duration',
-      'Expected Earning',
-      'Payable Amount',
-      'Status',
-      'Payment Status',
-      'Average Rating',
-      'Total Rating',
-      'No of Consignments',
+      'State',
+      'No of Consignment',
       'Total Amount',
-      'Created At',
-      'Updated At'
+      'Traveler\'s Consignment',
+      'Status of Consignment',
+      'Payment'
     ];
 
     const csvContent = [
       headers.join(','),
-      ...filteredTravelers.map(traveler => [
-        traveler.travelId || '',
-        traveler.travelerId || '',
-        `"${traveler.travelerName || ''}"`,
-        traveler.phoneNo || '',
-        `"${traveler.email || ''}"`,
-        `"${traveler.address || ''}"`,
-        traveler.leavingLocation || '',
-        traveler.goingLocation || '',
-        traveler.travelMode || '',
-        traveler.vehicleType || '',
-        traveler.vehicleNumber || '',
-        traveler.travelDate || '',
-        traveler.distance || '',
-        traveler.duration || '',
-        traveler.expectedearning || '',
-        traveler.payableAmount || '',
-        traveler.status || '',
-        traveler.paymentStatus || '',
-        traveler.averageRating || '',
-        traveler.totalrating || '',
-        traveler.noOfConsignment || '',
-        traveler.totalAmount || '',
-        traveler.createdAt || '',
-        traveler.updatedAt || ''
-      ].join(','))
+      ...filteredTravelers.map(traveler => {
+        // Get the name value using backend-specific logic
+        const nameValue = traveler['Name'] || traveler.username || traveler.sender || '';
+        
+        // Clean up address for CSV export
+        const cleanAddress = (() => {
+          const address = traveler['Address'] || '';
+          if (!address || 
+              address.trim() === 'to' || 
+              address.trim() === ' to ' || 
+              address.includes('undefined') ||
+              address.trim() === 'null to null' ||
+              address.trim() === ' to') {
+            return 'N/A';
+          }
+          return address;
+        })();
+        
+        return [
+          traveler['Traveler Id'] || '',
+          `"${nameValue}"`,
+          traveler['Phone No'] || '',
+          `"${cleanAddress}"`,
+          traveler['State'] || '',
+          traveler['No of Consignment'] || 1,
+          Number(traveler['Total Amount'] || 0).toFixed(2),
+          `"${traveler['Traveler\'s Consignment'] || ''}"`,
+          traveler['Status of Consignment'] || '',
+          traveler['Payment'] || ''
+        ].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -151,7 +193,7 @@ const TravelerReport = () => {
           <div className="search-filter-container">
             <input
               type="text"
-              placeholder="Search by ID, name, phone, email, location..."
+              placeholder="Search by ID, name, phone, address, state..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -180,113 +222,97 @@ const TravelerReport = () => {
         <table className="traveler-table">
           <thead>
             <tr>
-              <th>Travel Info</th>
-              <th>Traveler Details</th>
-              <th>Travel Details</th>
-              <th>Financial Info</th>
-              <th>Status & Rating</th>
-              <th>Consignments</th>
-              <th>Dates</th>
+              <th>Traveler Id</th>
+              <th>Name</th>
+              <th>Phone No</th>
+              <th>Address</th>
+              <th>State</th>
+              <th>No of Consignment</th>
+              <th>Total Amount</th>
+              <th>Traveler's Consignment</th>
+              <th>Status of Consignment</th>
+              <th>Payment</th>
             </tr>
           </thead>
           <tbody>
             {filteredTravelers.length === 0 ? (
               <tr>
-                <td colSpan="7" className="no-data">No traveler data available</td>
+                <td colSpan="10" className="no-data">No traveler data available</td>
               </tr>
             ) : (
-              filteredTravelers.map((traveler, index) => (
-                <tr key={traveler.travelId || index}>
-                  <td>
-                    <div className="travel-info">
-                      <div><strong>Travel ID:</strong> {traveler.travelId || 'N/A'}</div>
-                      <div><strong>Traveler ID:</strong> {traveler.travelerId || 'N/A'}</div>
-                      <div><strong>Traveler Name:</strong> {traveler.travelerName || 'N/A'}</div>
-                      <div><strong>Phone:</strong> {traveler.phoneNo || 'N/A'}</div>
-                      <div><strong>Email:</strong> {traveler.email || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="traveler-details">
-                      <div><strong>Address:</strong> {traveler.address || 'N/A'}</div>
-                      <div><strong>Is Verified:</strong> {traveler.isVerified ? 'Yes' : 'No'}</div>
-                      <div><strong>Created:</strong> {traveler.travelerCreatedAt || 'N/A'}</div>
-                      <div><strong>Last Updated:</strong> {traveler.travelerLastUpdated || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="travel-details">
-                      <div><strong>From:</strong> {traveler.leavingLocation || 'N/A'}</div>
-                      <div><strong>To:</strong> {traveler.goingLocation || 'N/A'}</div>
-                      <div><strong>Mode:</strong> {traveler.travelMode || 'N/A'}</div>
-                      <div><strong>Vehicle:</strong> {traveler.vehicleType || 'N/A'}</div>
-                      <div><strong>Vehicle No:</strong> {traveler.vehicleNumber || 'N/A'}</div>
-                      <div><strong>Date:</strong> {traveler.travelDate || 'N/A'}</div>
-                      <div><strong>Distance:</strong> {traveler.distance || 'N/A'} km</div>
-                      <div><strong>Duration:</strong> {traveler.duration || 'N/A'} hrs</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="financial-info">
-                      <div><strong>Expected Earning:</strong> ₹{Number(traveler.expectedearning || 0).toFixed(2)}</div>
-                      <div><strong>Payable Amount:</strong> ₹{Number(traveler.payableAmount || 0).toFixed(2)}</div>
-                      {/* <div><strong>Base Amount:</strong> ₹{Number(traveler.baseAmount || 0).toFixed(2)}</div>
-                      <div><strong>Discount:</strong> ₹{Number(traveler.discount || 0).toFixed(2)}</div>
-                      <div><strong>Total Amount:</strong> ₹{Number(traveler.totalAmount || 0).toFixed(2)}</div>
-                      <div><strong>Insurance:</strong> ₹{Number(traveler.insuranceAmount || 0).toFixed(2)}</div>
-                      <div><strong>Fuel Cost:</strong> ₹{Number(traveler.fuelCost || 0).toFixed(2)}</div>
-                      <div><strong>Toll Charges:</strong> ₹{Number(traveler.tollCharges || 0).toFixed(2)}</div> */}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="status-rating">
-                      <div>
-                        <strong>Status:</strong> 
-                        <span className={`status ${traveler.status?.toLowerCase() || 'unknown'}`}>
-                          {traveler.status || 'N/A'}
-                        </span>
-                      </div>
-                      <div>
-                        <strong>Payment Status:</strong> 
-                        <span className={`payment ${traveler.paymentStatus?.toLowerCase() || 'unknown'}`}>
-                          {traveler.paymentStatus || 'N/A'}
-                        </span>
-                      </div>
-                      <div><strong>Payment Method:</strong> {traveler.paymentMethod || 'N/A'}</div>
-                      <div><strong>Average Rating:</strong> {traveler.averageRating || 'N/A'}/5</div>
-                      <div><strong>Total Rating:</strong> {traveler.totalrating || 'N/A'}</div>
-                      {traveler.review && (
-                        <div><strong>Review:</strong> {traveler.review}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="consignments-info">
-                      <div><strong>No of Consignments:</strong> {traveler.noOfConsignment || 0}</div>
-                      <div><strong>Payment:</strong> {traveler.payment || 'N/A'}</div>
-                      {Array.isArray(traveler.associatedConsignments) && traveler.associatedConsignments.length > 0 ? (
-                        <button 
-                          className="btn-details"
-                          onClick={() => showConsignmentDetails(traveler.associatedConsignments, 'traveler')}
-                        >
-                          View Consignments ({traveler.associatedConsignments.length})
-                        </button>
-                      ) : (
-                        <span className="no-consignments">No consignments</span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="dates-info">
-                      <div><strong>Travel Date:</strong> {traveler.travelDate || 'N/A'}</div>
-                      <div><strong>Start Date:</strong> {traveler.startedat || 'N/A'}</div>
-                      <div><strong>End Date:</strong> {traveler.endedat || 'N/A'}</div>
-                      <div><strong>Created:</strong> {traveler.createdAt || 'N/A'}</div>
-                      <div><strong>Updated:</strong> {traveler.updatedAt || 'N/A'}</div>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                             filteredTravelers.map((traveler, index) => {
+                               // Debug logging for first few travelers only
+                               if (index < 3) {
+                                 console.log(`Traveler ${index}:`, {
+                                   travelerId: traveler['Traveler Id'],
+                                   name: traveler['Name'],
+                                   nameType: typeof traveler['Name']
+                                 });
+                               }
+                               return (
+                 <tr key={traveler['Traveler Id'] || index}>
+                   <td className="id-cell" title={traveler['Traveler Id'] || 'N/A'}>{traveler['Traveler Id'] || 'N/A'}</td>
+                   <td className="large-value" title={traveler['Name'] || traveler.username || traveler.sender || 'N/A'}>
+                     {traveler['Name'] || traveler.username || traveler.sender || 'N/A'}
+                   </td>
+                   <td className="phone-cell" title={traveler['Phone No'] || 'N/A'}>{traveler['Phone No'] || 'N/A'}</td>
+                   <td className="address-cell" title={(() => {
+                       const address = traveler['Address'] || '';
+                       if (!address || 
+                           address.trim() === 'to' || 
+                           address.trim() === ' to ' || 
+                           address.includes('undefined') ||
+                           address.trim() === 'null to null' ||
+                           address.trim() === ' to') {
+                         return 'N/A';
+                       }
+                       return address;
+                     })()}>
+                     {(() => {
+                       const address = traveler['Address'] || '';
+                       // Clean up empty concatenations like "to", " to ", "undefined to undefined", etc.
+                       if (!address || 
+                           address.trim() === 'to' || 
+                           address.trim() === ' to ' || 
+                           address.includes('undefined') ||
+                           address.trim() === 'null to null' ||
+                           address.trim() === ' to') {
+                         return 'N/A';
+                       }
+                       return address;
+                     })()}
+                   </td>
+                   <td title={traveler['State'] || 'N/A'}>{traveler['State'] || 'N/A'}</td>
+                   <td title={traveler['No of Consignment'] || 1}>{traveler['No of Consignment'] || 1}</td>
+                   <td className="amount-cell" title={`₹${Number(traveler['Total Amount'] || 0).toFixed(2)}`}>
+                     {(() => {
+                       const amount = Number(traveler['Total Amount'] || 0);
+                       if (amount === 0) {
+                         return <span style={{color: '#6c757d', fontStyle: 'italic'}}>₹0.00</span>;
+                       }
+                       return `₹${amount.toFixed(2)}`;
+                     })()}
+                   </td>
+                   <td title={traveler['Traveler\'s Consignment'] || 'No consignments'}>
+                     {traveler['Traveler\'s Consignment'] && traveler['Traveler\'s Consignment'] !== 'N/A' ? (
+                       <span className="consignment-info">{traveler['Traveler\'s Consignment']}</span>
+                     ) : (
+                       <span className="no-consignments">No consignments</span>
+                     )}
+                   </td>
+                   <td title={traveler['Status of Consignment'] || 'N/A'}>
+                     <span className={`status ${traveler['Status of Consignment']?.toLowerCase() || 'unknown'}`}>
+                       {traveler['Status of Consignment'] || 'N/A'}
+                     </span>
+                   </td>
+                   <td title={traveler['Payment'] || 'N/A'}>
+                     <span className={`payment ${traveler['Payment']?.toLowerCase() || 'unknown'}`}>
+                       {traveler['Payment'] || 'N/A'}
+                     </span>
+                   </td>
+                 </tr>
+               );
+                             })
             )}
           </tbody>
         </table>

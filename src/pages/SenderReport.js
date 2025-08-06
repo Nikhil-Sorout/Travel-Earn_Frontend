@@ -19,8 +19,26 @@ const SenderReport = () => {
   const fetchSenderData = async () => {
     try {
       setLoading(true);
-      const data = await getSenderReport();
-      console.log('Sender data received:', data);
+      const response = await getSenderReport();
+      console.log('Sender data received:', response);
+      // Handle the backend response structure with data and pagination
+      const data = response.data || response;
+      console.log('Processed data:', data);
+      console.log('Data type:', typeof data);
+      console.log('Is array:', Array.isArray(data));
+      
+      if (Array.isArray(data) && data.length > 0) {
+        console.log('First sender record keys:', Object.keys(data[0]));
+        console.log('Name field value:', data[0]['Name']);
+        console.log('Sample record:', {
+          senderId: data[0]['Sender Id'],
+          name: data[0]['Name'],
+          phoneNo: data[0]['Phone No'],
+          address: data[0]['Address'],
+          totalAmount: data[0]['Total Amount']
+        });
+      }
+      
       setSenders(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
@@ -44,104 +62,54 @@ const SenderReport = () => {
   };
 
   const filteredSenders = senders.filter(sender => {
-    const matchesSearch = 
-      sender.consignmentId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.senderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.senderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.senderMobileNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.senderEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sender.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Get the name value using simplified logic
+    const nameValue = sender['Name'] || sender.senderName || '';
     
-    const matchesStatus = filterStatus === 'all' || sender.consignmentStatus === filterStatus;
+    const matchesSearch = 
+      sender['Sender Id']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      nameValue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sender['Phone No']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sender['Address']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sender['State']?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || sender['Status of Consignment'] === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
 
   const exportToCSV = () => {
     const headers = [
-      'Consignment ID',
-      'Consignment Status',
-      'Sender ID',
-      'Sender Name',
-      'Sender Mobile No',
-      'Sender Email',
-      'Sender Address',
-      'Description',
-      'Category',
-      'Subcategory',
-      'Weight',
-      'Dimensions',
-      'Distance',
-      'Duration',
-      'Handle With Care',
-      'Special Request',
-      'Delivery Type',
-      'Payment Method',
-      'Payment Status',
-      'Tracking Number',
-      'Estimated Delivery',
-      'Actual Delivery',
-      'Recipient Name',
-      'Recipient Address',
-      'Recipient Phone',
-      'Total Amount Sender',
-      'Amount to Traveler',
-      'T&E Amount',
-      'Tax Component',
-      'Insurance Amount',
+      'Sender Id',
+      'Name',
+      'Phone No',
+      'Address',
+      'State',
+      'No of Consignment',
       'Total Amount',
-      'Traveler Name',
-      'Traveler Mobile',
-      'Travel Mode',
-      'Date of Sending',
-      'Received Date',
-      'Created At',
-      'Updated At'
+      'Sender\'s Consignment',
+      'Status of Consignment',
+      'Payment'
     ];
 
     const csvContent = [
       headers.join(','),
-      ...filteredSenders.map(sender => [
-        sender.consignmentId || '',
-        sender.consignmentStatus || '',
-        sender.senderId || '',
-        `"${sender.senderName || ''}"`,
-        sender.senderMobileNo || '',
-        `"${sender.senderEmail || ''}"`,
-        `"${sender.senderAddress || ''}"`,
-        `"${sender.description || ''}"`,
-        sender.category || '',
-        sender.subcategory || '',
-        sender.weight || '',
-        sender.dimensions || '',
-        sender.distance || '',
-        sender.duration || '',
-        sender.handleWithCare ? 'Yes' : 'No',
-        `"${sender.specialRequest || ''}"`,
-        sender.deliveryType || '',
-        sender.paymentMethod || '',
-        sender.paymentStatus || '',
-        sender.trackingNumber || '',
-        sender.estimatedDelivery || '',
-        sender.actualDelivery || '',
-        `"${sender.recepientName || ''}"`,
-        `"${sender.recepientAddress || ''}"`,
-        sender.recepientPhoneNo || '',
-        sender.totalAmountSender || '',
-        sender.amountToBePaidToTraveler || '',
-        sender.tneAmount || '',
-        sender.taxComponent || '',
-        sender.insuranceAmount || '',
-        sender.totalAmount || '',
-        `"${sender.travelerName || ''}"`,
-        sender.travelerMobileNo || '',
-        sender.travelMode || '',
-        sender.dateOfSending || '',
-        sender.receivedDate || '',
-        sender.createdAt || '',
-        sender.updatedAt || ''
-      ].join(','))
+      ...filteredSenders.map(sender => {
+        // Get the name value using simplified logic
+        const nameValue = sender['Name'] || sender.senderName || '';
+        
+        return [
+          sender['Sender Id'] || '',
+          `"${nameValue}"`,
+          sender['Phone No'] || '',
+          `"${sender['Address'] || ''}"`,
+          sender['State'] || '',
+          sender['No of Consignment'] || 1,
+          Number(sender['Total Amount'] || 0).toFixed(2),
+          `"${sender['Sender\'s Consignment'] || ''}"`,
+          sender['Status of Consignment'] || '',
+          sender['Payment'] || ''
+        ].join(',');
+      })
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -180,7 +148,7 @@ const SenderReport = () => {
           <div className="search-filter-container">
             <input
               type="text"
-              placeholder="Search by ID, name, phone, email, description, category..."
+              placeholder="Search by ID, name, phone, address, state..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -211,133 +179,64 @@ const SenderReport = () => {
         <table className="sender-table">
           <thead>
             <tr>
-              <th>Consignment Info</th>
-              <th>Sender Details</th>
-              <th>Consignment Details</th>
-              <th>Recipient Info</th>
-              <th>Financial Details</th>
-              <th>Traveler Info</th>
-              <th>Delivery Info</th>
-              <th>Dates</th>
+              <th>Sender Id</th>
+              <th>Name</th>
+              <th>Phone No</th>
+              <th>Address</th>
+              <th>State</th>
+              <th>No of Consignment</th>
+              <th>Total Amount</th>
+              <th>Sender's Consignment</th>
+              <th>Status of Consignment</th>
+              <th>Payment</th>
             </tr>
           </thead>
           <tbody>
             {filteredSenders.length === 0 ? (
               <tr>
-                <td colSpan="8" className="no-data">No sender data available</td>
+                <td colSpan="10" className="no-data">No sender data available</td>
               </tr>
             ) : (
-              filteredSenders.map((sender, index) => (
-                <tr key={sender.consignmentId || index}>
-                  <td>
-                    <div className="consignment-info">
-                      <div><strong>Consignment ID:</strong> {sender.consignmentId || 'N/A'}</div>
-                      <div>
-                        <strong>Status:</strong> 
-                        <span className={`status ${sender.consignmentStatus?.toLowerCase() || 'unknown'}`}>
-                          {sender.consignmentStatus || 'N/A'}
-                        </span>
-                      </div>
-                      <div><strong>Tracking Number:</strong> {sender.trackingNumber || 'N/A'}</div>
-                      <div><strong>Delivery Type:</strong> {sender.deliveryType || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="sender-details">
-                      <div><strong>Sender ID:</strong> {sender.senderId || 'N/A'}</div>
-                      <div><strong>Name:</strong> {sender.senderName || 'N/A'}</div>
-                      <div><strong>Mobile:</strong> {sender.senderMobileNo || 'N/A'}</div>
-                      <div><strong>Email:</strong> {sender.senderEmail || 'N/A'}</div>
-                      <div><strong>Address:</strong> {sender.senderAddress || 'N/A'}</div>
-                      <div><strong>Current Location:</strong> {sender.senderCurrentLocation || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="consignment-details">
-                      <div><strong>Description:</strong> {sender.description || 'N/A'}</div>
-                      <div><strong>Category:</strong> {sender.category || 'N/A'}</div>
-                      <div><strong>Subcategory:</strong> {sender.subcategory || 'N/A'}</div>
-                      <div><strong>Weight:</strong> {sender.weight || 'N/A'} kg</div>
-                      <div><strong>Dimensional Weight:</strong> {sender.dimensionalweight || 'N/A'} kg</div>
-                      <div><strong>Dimensions:</strong> {sender.dimensions || 'N/A'}</div>
-                      <div><strong>Distance:</strong> {sender.distance || 'N/A'} km</div>
-                      <div><strong>Duration:</strong> {sender.duration || 'N/A'} hrs</div>
-                      <div><strong>Handle With Care:</strong> {sender.handleWithCare ? 'Yes' : 'No'}</div>
-                      {sender.specialRequest && (
-                        <div><strong>Special Request:</strong> {sender.specialRequest}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="recipient-info">
-                      <div><strong>Name:</strong> {sender.recepientName || 'N/A'}</div>
-                      <div><strong>Address:</strong> {sender.recepientAddress || 'N/A'}</div>
-                      <div><strong>Phone:</strong> {sender.recepientPhoneNo || 'N/A'}</div>
-                      <div><strong>Email:</strong> {sender.receiverEmail || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="financial-details">
-                      <div><strong>Total Amount:</strong> ₹{Number(sender.totalAmountSender || 0).toFixed(2)}</div>
-                      <div><strong>Amount to Traveler:</strong> ₹{Number(sender.amountToBePaidToTraveler || 0).toFixed(2)}</div>
-                      {/* <div><strong>T&E Amount:</strong> ₹{Number(sender.tneAmount || 0).toFixed(2)}</div>
-                      <div><strong>Tax Component:</strong> ₹{Number(sender.taxComponent || 0).toFixed(2)}</div>
-                      <div><strong>Insurance Amount:</strong> ₹{Number(sender.insuranceAmount || 0).toFixed(2)}</div>
-                      <div><strong>Total Amount:</strong> ₹{Number(sender.totalAmount || 0).toFixed(2)}</div>
-                      <div>
-                        <strong>Sender Payment:</strong> 
-                        <span className={`payment ${sender.senderPaymentStatus?.toLowerCase() || 'unknown'}`}>
-                          {sender.senderPaymentStatus || 'N/A'}
-                        </span>
-                      </div>
-                      <div> */}
-                        {/* <strong>Traveler Payment:</strong> 
-                        <span className={`payment ${sender.travelerPaymentStatus?.toLowerCase() || 'unknown'}`}>
-                          {sender.travelerPaymentStatus || 'N/A'}
-                        </span>
-                      </div>
-                      <div><strong>Payment Method:</strong> {sender.paymentMethod || 'N/A'}</div>
-                      */}
-                      </div> 
-
-                  </td>
-                  <td>
-                    <div className="traveler-info">
-                      <div><strong>Traveler ID:</strong> {sender.travelerId || 'N/A'}</div>
-                      <div><strong>Name:</strong> {sender.travelerName || 'N/A'}</div>
-                      <div><strong>Mobile:</strong> {sender.travelerMobileNo || 'N/A'}</div>
-                      <div><strong>Address:</strong> {sender.travelerAddress || 'N/A'}</div>
-                      <div><strong>Acceptance Date:</strong> {sender.travelerAcceptanceDate || 'N/A'}</div>
-                      <div><strong>Travel Mode:</strong> {sender.travelMode || 'N/A'}</div>
-                      <div><strong>Has Traveler:</strong> {sender.hasTraveler || 'N/A'}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="delivery-info">
-                      <div><strong>Pickup Date:</strong> {sender.pickupDate || 'N/A'}</div>
-                      <div><strong>Pickup Time:</strong> {sender.pickupTime || 'N/A'}</div>
-                      <div><strong>Delivery Date:</strong> {sender.deliveryDate || 'N/A'}</div>
-                      <div><strong>Delivery Time:</strong> {sender.deliveryTime || 'N/A'}</div>
-                      <div><strong>Estimated Delivery:</strong> {sender.estimatedDelivery || 'N/A'}</div>
-                      <div><strong>Actual Delivery:</strong> {sender.actualDelivery || 'N/A'}</div>
-                      <div><strong>Signature:</strong> {sender.signature || 'N/A'}</div>
-                      {sender.notes && (
-                        <div><strong>Notes:</strong> {sender.notes}</div>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="dates-info">
-                      <div><strong>Date of Sending:</strong> {sender.dateOfSending || 'N/A'}</div>
-                      <div><strong>Received Date:</strong> {sender.receivedDate || 'N/A'}</div>
-                      <div><strong>Created:</strong> {sender.createdAt || 'N/A'}</div>
-                      <div><strong>Updated:</strong> {sender.updatedAt || 'N/A'}</div>
-                      <div><strong>Sender Created:</strong> {sender.senderCreatedAt || 'N/A'}</div>
-                      <div><strong>Sender Updated:</strong> {sender.senderLastUpdated || 'N/A'}</div>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                             filteredSenders.map((sender, index) => {
+                               // Debug logging for first few senders only
+                               if (index < 3) {
+                                 console.log(`Sender ${index}:`, {
+                                   senderId: sender['Sender Id'],
+                                   name: sender['Name'],
+                                   nameType: typeof sender['Name']
+                                 });
+                               }
+                               return (
+                 <tr key={sender['Sender Id'] || index}>
+                   <td className="id-cell" title={sender['Sender Id'] || 'N/A'}>{sender['Sender Id'] || 'N/A'}</td>
+                   <td className="large-value" title={sender['Name'] || sender.senderName || 'N/A'}>
+                     {sender['Name'] || sender.senderName || 'N/A'}
+                   </td>
+                   <td className="phone-cell" title={sender['Phone No'] || 'N/A'}>{sender['Phone No'] || 'N/A'}</td>
+                   <td className="address-cell" title={sender['Address'] || 'N/A'}>{sender['Address'] || 'N/A'}</td>
+                   <td title={sender['State'] || 'N/A'}>{sender['State'] || 'N/A'}</td>
+                   <td title={sender['No of Consignment'] || 1}>{sender['No of Consignment'] || 1}</td>
+                   <td className="amount-cell" title={`₹${Number(sender['Total Amount'] || 0).toFixed(2)}`}>₹{Number(sender['Total Amount'] || 0).toFixed(2)}</td>
+                   <td title={sender['Sender\'s Consignment'] || 'No consignments'}>
+                     {sender['Sender\'s Consignment'] && sender['Sender\'s Consignment'] !== 'N/A' ? (
+                       <span className="consignment-info">{sender['Sender\'s Consignment']}</span>
+                     ) : (
+                       <span className="no-consignments">No consignments</span>
+                     )}
+                   </td>
+                   <td title={sender['Status of Consignment'] || 'N/A'}>
+                     <span className={`status ${sender['Status of Consignment']?.toLowerCase() || 'unknown'}`}>
+                       {sender['Status of Consignment'] || 'N/A'}
+                     </span>
+                   </td>
+                   <td title={sender['Payment'] || 'N/A'}>
+                     <span className={`payment ${sender['Payment']?.toLowerCase() || 'unknown'}`}>
+                       {sender['Payment'] || 'N/A'}
+                     </span>
+                   </td>
+                 </tr>
+               );
+                             })
             )}
           </tbody>
         </table>

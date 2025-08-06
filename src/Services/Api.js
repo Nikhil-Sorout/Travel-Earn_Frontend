@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://api.timestringssystem.com',  // Use the actual IP address of your server  // Use the actual IP address of your server
-  // baseURL: 'http://192.168.65.191:5002',
+  // baseURL: 'https://api.timestringssystem.com',  // Use the actual IP address of your server  // Use the actual IP address of your server
+  baseURL: 'http://192.168.65.0:5002',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,10 +28,9 @@ export const getSenderReport = async () => {
     throw error;
   }
 };
-
 export const getConsignmentConsolidatedReport = async (page = 1, limit = 100) => {
   try {
-    const response = await api.get(`/report/consignment-consolidated?page=${page}&limit=${limit}`);
+    const response = await api.get(`/report/consignment-consolidated-aggregation?page=${page}&limit=${limit}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching consignment consolidated report:', error);
