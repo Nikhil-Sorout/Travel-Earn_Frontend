@@ -1,0 +1,329 @@
+/* Sales Dashboard Styles */
+.mainContainer {
+  display: flex;
+  height: 100vh;
+  background-color: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.contentWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Filter Section */
+.filtersContainer {
+  background: white;
+  padding: 20px;
+  margin: 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.filtersTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dateInput,
+.periodSelect,
+.exportDropdown {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  min-width: 140px;
+}
+
+.dateInput:focus,
+.periodSelect:focus,
+.exportDropdown:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.dateInput:disabled,
+.periodSelect:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Export Section */
+.exportSection {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.downloadButton {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.downloadButton:hover {
+  background: #0056b3;
+}
+
+/* Table Section */
+.tableContainer {
+  background: white;
+  margin: 0 20px 20px 20px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  overflow: hidden;
+}
+
+.tableHeader {
+  background: #f8f9fa;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Region Button */
+.regionButton {
+  background: #fff;
+  color: black;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.regionButton:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+.modalBody {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.modalLoader,
+.modalEmpty {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.modalTableWrapper {
+  overflow-x: auto;
+}
+
+.modalTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.modalTable th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modalTable td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.modalTable tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Revenue Section */
+.revenueSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #f8f9fa;
+  border-top: 2px solid #dee2e6;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.revenueLabel {
+  color: #333;
+}
+
+.revenueAmount {
+  color: #007bff;
+  font-size: 18px;
+}
+
+/* Loading State */
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  color: #6c757d;
+}
+
+.emptyStateText {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.emptyStateSubtext {
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .filtersContainer,
+  .tableContainer {
+    margin: 16px;
+  }
+
+  .filterRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exportSection {
+    margin-left: 0;
+    margin-top: 16px;
+  }
+
+  .dateInput,
+  .periodSelect,
+  .exportDropdown {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .downloadButton {
+    width: 100%;
+  }
+}
