@@ -15,8 +15,30 @@ const LogisticsDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [driverName, setDriverName] = useState('');
   const [date, setDate] = useState('');
+  const [copiedCell, setCopiedCell] = useState(null);
 
   const [selectedFormat, setSelectedFormat] = useState('CSV');
+
+  // Function to copy text to clipboard
+  const copyToClipboard = async (text, cellId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCell(cellId);
+      // Clear the copied state after 2 seconds
+      setTimeout(() => setCopiedCell(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedCell(cellId);
+      setTimeout(() => setCopiedCell(null), 2000);
+    }
+  };
 
   const totalPages = Math.ceil(activeTravel / transactionsPerPage);
 
@@ -193,20 +215,64 @@ const LogisticsDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {travelHistory.map((load) => (
+                {travelHistory.map((load, index) => (
                   <tr key={load._id}>
-                    <td title={load._id}>{load.travelId}</td>
-                    <td title={load.username}>{load.username}</td>
-                    <td title={load.duration}>{load.duration}</td>
-                    <td title={load.amount}>{load.expectedearning}</td>
-                    <td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-travel-id` ? 'copied' : ''}`}
+                      title={load._id}
+                      onClick={() => copyToClipboard(load.travelId || '', `${index}-travel-id`)}
+                    >
+                      {load.travelId}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-username` ? 'copied' : ''}`}
+                      title={load.username}
+                      onClick={() => copyToClipboard(load.username || '', `${index}-username`)}
+                    >
+                      {load.username}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-duration` ? 'copied' : ''}`}
+                      title={load.duration}
+                      onClick={() => copyToClipboard(load.duration || '', `${index}-duration`)}
+                    >
+                      {load.duration}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-amount` ? 'copied' : ''}`}
+                      title={load.amount}
+                      onClick={() => copyToClipboard(load.expectedearning || '', `${index}-amount`)}
+                    >
+                      {load.expectedearning}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
+                      onClick={() => copyToClipboard(load.status || '', `${index}-status`)}
+                    >
                       <span className={getStatusClass(load.status)}>
                         {load.status}
                       </span>
                     </td>
-                    <td title={load.Leavinglocation}>{load.Leavinglocation}</td>
-                    <td title={load.Goinglocation}>{load.Goinglocation}</td>
-                    <td>{load.distance}</td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-leaving` ? 'copied' : ''}`}
+                      title={load.Leavinglocation}
+                      onClick={() => copyToClipboard(load.Leavinglocation || '', `${index}-leaving`)}
+                    >
+                      {load.Leavinglocation}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-going` ? 'copied' : ''}`}
+                      title={load.Goinglocation}
+                      onClick={() => copyToClipboard(load.Goinglocation || '', `${index}-going`)}
+                    >
+                      {load.Goinglocation}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-distance` ? 'copied' : ''}`}
+                      onClick={() => copyToClipboard(load.distance || '', `${index}-distance`)}
+                    >
+                      {load.distance}
+                    </td>
                   </tr>
                 ))}
               </tbody>
