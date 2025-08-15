@@ -11,16 +11,60 @@ const SenderReport = () => {
   const [modalType, setModalType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [copiedCell, setCopiedCell] = useState(null);
+  const recordsPerPage = 30;
 
   useEffect(() => {
     fetchSenderData();
-  }, []);
+  }, [currentPage]);
+
+  // Function to copy text to clipboard
+  const copyToClipboard = async (text, cellId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCell(cellId);
+      // Clear the copied state after 2 seconds
+      setTimeout(() => setCopiedCell(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedCell(cellId);
+      setTimeout(() => setCopiedCell(null), 2000);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const maxButtons = 3;
+    let start = Math.max(currentPage - 1, 1);
+    let end = Math.min(start + maxButtons - 1, totalPages);
+
+    // Adjust start if we're near the end
+    if (end - start < maxButtons - 1) {
+      start = Math.max(end - maxButtons + 1, 1);
+    }
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const fetchSenderData = async () => {
     try {
       setLoading(true);
-      const response = await getSenderReport();
+      const response = await getSenderReport(currentPage, recordsPerPage);
       console.log('Sender data received:', response);
+      
       // Handle the backend response structure with data and pagination
       const data = response.data || response;
       console.log('Processed data:', data);
@@ -40,6 +84,17 @@ const SenderReport = () => {
       }
       
       setSenders(Array.isArray(data) ? data : []);
+      
+      // Set pagination info if available
+      if (response.pagination) {
+        setTotalPages(response.pagination.totalPages || 1);
+        setTotalRecords(response.pagination.totalRecords || 0);
+      } else {
+        // If no pagination info, calculate based on data length
+        setTotalPages(Math.ceil((Array.isArray(data) ? data.length : 0) / recordsPerPage));
+        setTotalRecords(Array.isArray(data) ? data.length : 0);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch sender data');
@@ -208,28 +263,80 @@ const SenderReport = () => {
                                }
                                return (
                  <tr key={sender['Sender Id'] || index}>
-                   <td className="id-cell" title={sender['Sender Id'] || 'N/A'}>{sender['Sender Id'] || 'N/A'}</td>
-                   <td className="large-value" title={sender['Name'] || sender.senderName || 'N/A'}>
+                   <td 
+                     className={`id-cell copyable-cell ${copiedCell === `${index}-id` ? 'copied' : ''}`}
+                     title={sender['Sender Id'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Sender Id'] || 'N/A', `${index}-id`)}
+                   >
+                     {sender['Sender Id'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`large-value copyable-cell ${copiedCell === `${index}-name` ? 'copied' : ''}`}
+                     title={sender['Name'] || sender.senderName || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Name'] || sender.senderName || 'N/A', `${index}-name`)}
+                   >
                      {sender['Name'] || sender.senderName || 'N/A'}
                    </td>
-                   <td className="phone-cell" title={sender['Phone No'] || 'N/A'}>{sender['Phone No'] || 'N/A'}</td>
-                   <td className="address-cell" title={sender['Address'] || 'N/A'}>{sender['Address'] || 'N/A'}</td>
-                   <td title={sender['State'] || 'N/A'}>{sender['State'] || 'N/A'}</td>
-                   <td title={sender['No of Consignment'] || 1}>{sender['No of Consignment'] || 1}</td>
-                   <td className="amount-cell" title={`₹${Number(sender['Total Amount'] || 0).toFixed(2)}`}>₹{Number(sender['Total Amount'] || 0).toFixed(2)}</td>
-                   <td title={sender['Sender\'s Consignment'] || 'No consignments'}>
+                   <td 
+                     className={`phone-cell copyable-cell ${copiedCell === `${index}-phone` ? 'copied' : ''}`}
+                     title={sender['Phone No'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Phone No'] || 'N/A', `${index}-phone`)}
+                   >
+                     {sender['Phone No'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`address-cell copyable-cell ${copiedCell === `${index}-address` ? 'copied' : ''}`}
+                     title={sender['Address'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Address'] || 'N/A', `${index}-address`)}
+                   >
+                     {sender['Address'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-state` ? 'copied' : ''}`}
+                     title={sender['State'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['State'] || 'N/A', `${index}-state`)}
+                   >
+                     {sender['State'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-consignment-count` ? 'copied' : ''}`}
+                     title={sender['No of Consignment'] || 1}
+                     onClick={() => copyToClipboard(String(sender['No of Consignment'] || 1), `${index}-consignment-count`)}
+                   >
+                     {sender['No of Consignment'] || 1}
+                   </td>
+                   <td 
+                     className={`amount-cell copyable-cell ${copiedCell === `${index}-amount` ? 'copied' : ''}`}
+                     title={`₹${Number(sender['Total Amount'] || 0).toFixed(2)}`}
+                     onClick={() => copyToClipboard(`₹${Number(sender['Total Amount'] || 0).toFixed(2)}`, `${index}-amount`)}
+                   >
+                     ₹{Number(sender['Total Amount'] || 0).toFixed(2)}
+                   </td>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-consignment` ? 'copied' : ''}`}
+                     title={sender['Sender\'s Consignment'] || 'No consignments'}
+                     onClick={() => copyToClipboard(sender['Sender\'s Consignment'] || 'No consignments', `${index}-consignment`)}
+                   >
                      {sender['Sender\'s Consignment'] && sender['Sender\'s Consignment'] !== 'N/A' ? (
                        <span className="consignment-info">{sender['Sender\'s Consignment']}</span>
                      ) : (
                        <span className="no-consignments">No consignments</span>
                      )}
                    </td>
-                   <td title={sender['Status of Consignment'] || 'N/A'}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
+                     title={sender['Status of Consignment'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Status of Consignment'] || 'N/A', `${index}-status`)}
+                   >
                      <span className={`status ${sender['Status of Consignment']?.toLowerCase() || 'unknown'}`}>
                        {sender['Status of Consignment'] || 'N/A'}
                      </span>
                    </td>
-                   <td title={sender['Payment'] || 'N/A'}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-payment` ? 'copied' : ''}`}
+                     title={sender['Payment'] || 'N/A'}
+                     onClick={() => copyToClipboard(sender['Payment'] || 'N/A', `${index}-payment`)}
+                   >
                      <span className={`payment ${sender['Payment']?.toLowerCase() || 'unknown'}`}>
                        {sender['Payment'] || 'N/A'}
                      </span>
@@ -240,6 +347,38 @@ const SenderReport = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="pagination">
+        <div className="page-controls">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            «
+          </button>
+
+          {getPageNumbers().map((page) => (
+            <button
+              key={page}
+              className={`${currentPage === page ? "page-controls active-page" : ""}`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            »
+          </button>
+        </div>
+        <div className="pagination-info">
+          Showing page {currentPage} of {totalPages} ({totalRecords} total records)
+        </div>
       </div>
 
       {/* Modal for consignment details */}

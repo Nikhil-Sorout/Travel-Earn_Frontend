@@ -11,12 +11,34 @@ const ConsignmentConsolidatedReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [recordsPerPage, setRecordsPerPage] = useState(100);
+  const [recordsPerPage, setRecordsPerPage] = useState(30);
+  const [copiedCell, setCopiedCell] = useState(null);
   const tableContainerRef = useRef(null);
 
   useEffect(() => {
     fetchConsignmentData();
   }, [currentPage]);
+
+  // Function to copy text to clipboard
+  const copyToClipboard = async (text, cellId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCell(cellId);
+      // Clear the copied state after 2 seconds
+      setTimeout(() => setCopiedCell(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedCell(cellId);
+      setTimeout(() => setCopiedCell(null), 2000);
+    }
+  };
 
   useEffect(() => {
     // Add horizontal scroll functionality with mouse wheel
@@ -37,6 +59,23 @@ const ConsignmentConsolidatedReport = () => {
       tableContainer.removeEventListener('wheel', handleWheel);
     };
   }, []);
+
+  const getPageNumbers = () => {
+    const maxButtons = 3;
+    let start = Math.max(currentPage - 1, 1);
+    let end = Math.min(start + maxButtons - 1, totalPages);
+
+    // Adjust start if we're near the end
+    if (end - start < maxButtons - 1) {
+      start = Math.max(end - maxButtons + 1, 1);
+    }
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const fetchConsignmentData = async () => {
     try {
@@ -68,8 +107,12 @@ const ConsignmentConsolidatedReport = () => {
       // Set pagination info if available
       if (response.pagination) {
         setTotalPages(response.pagination.totalPages || 1);
-        setTotalRecords(response.pagination.totalRecords || 0);
-        setRecordsPerPage(response.pagination.recordsPerPage || 100);
+        setTotalRecords(response.pagination.totalRecords || response.pagination.total || 0);
+        setRecordsPerPage(response.pagination.recordsPerPage || 30);
+      } else {
+        // If no pagination info, calculate based on data length
+        setTotalPages(Math.ceil((Array.isArray(response.data || response) ? (response.data || response).length : 0) / recordsPerPage));
+        setTotalRecords(Array.isArray(response.data || response) ? (response.data || response).length : 0);
       }
       
       setError(null);
@@ -160,10 +203,6 @@ const ConsignmentConsolidatedReport = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
   };
 
   // Format date to local timezone
@@ -297,8 +336,17 @@ const ConsignmentConsolidatedReport = () => {
               ) : (
                 filteredConsignments.map((consignment, index) => (
                   <tr key={consignment['Consignment ID'] || index}>
-                    <td title={consignment['Consignment ID'] || 'N/A'}>{consignment['Consignment ID'] || 'N/A'}</td>
-                    <td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-consignment-id` ? 'copied' : ''}`}
+                      title={consignment['Consignment ID'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Consignment ID'] || 'N/A', `${index}-consignment-id`)}
+                    >
+                      {consignment['Consignment ID'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
+                      onClick={() => copyToClipboard(consignment['Consignment Status'] || 'N/A', `${index}-status`)}
+                    >
                       <span 
                         className={`status ${consignment['Consignment Status']?.toLowerCase() || 'unknown'}`}
                         title={consignment['Consignment Status'] || 'N/A'}
@@ -306,14 +354,45 @@ const ConsignmentConsolidatedReport = () => {
                         {consignment['Consignment Status'] || 'N/A'}
                       </span>
                     </td>
-                    <td title={consignment['Sender ID'] || 'N/A'}>{consignment['Sender ID'] || 'N/A'}</td>
-                    <td title={consignment['Sender Name'] || 'N/A'}>{consignment['Sender Name'] || 'N/A'}</td>
-                    <td title={consignment['Sender Mobile No'] || 'N/A'}>{consignment['Sender Mobile No'] || 'N/A'}</td>
-                    <td title={consignment['Sender Address'] || 'N/A'}>{consignment['Sender Address'] || 'N/A'}</td>
-                    <td title={`₹${Number(consignment['Total Amount Sender'] || 0).toFixed(2)}`}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-sender-id` ? 'copied' : ''}`}
+                      title={consignment['Sender ID'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Sender ID'] || 'N/A', `${index}-sender-id`)}
+                    >
+                      {consignment['Sender ID'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-sender-name` ? 'copied' : ''}`}
+                      title={consignment['Sender Name'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Sender Name'] || 'N/A', `${index}-sender-name`)}
+                    >
+                      {consignment['Sender Name'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-sender-mobile` ? 'copied' : ''}`}
+                      title={consignment['Sender Mobile No'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Sender Mobile No'] || 'N/A', `${index}-sender-mobile`)}
+                    >
+                      {consignment['Sender Mobile No'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-sender-address` ? 'copied' : ''}`}
+                      title={consignment['Sender Address'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Sender Address'] || 'N/A', `${index}-sender-address`)}
+                    >
+                      {consignment['Sender Address'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-sender-amount` ? 'copied' : ''}`}
+                      title={`₹${Number(consignment['Total Amount Sender'] || 0).toFixed(2)}`}
+                      onClick={() => copyToClipboard(`₹${Number(consignment['Total Amount Sender'] || 0).toFixed(2)}`, `${index}-sender-amount`)}
+                    >
                       ₹{Number(consignment['Total Amount Sender'] || 0).toFixed(2)}
                     </td>
-                    <td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-payment-status` ? 'copied' : ''}`}
+                      onClick={() => copyToClipboard(consignment['Payment Status'] || 'N/A', `${index}-payment-status`)}
+                    >
                       <span 
                         className={`payment ${consignment['Payment Status']?.toLowerCase() || 'unknown'}`}
                         title={consignment['Payment Status'] || 'N/A'}
@@ -321,17 +400,52 @@ const ConsignmentConsolidatedReport = () => {
                         {consignment['Payment Status'] || 'N/A'}
                       </span>
                     </td>
-                    <td title={consignment['Traveler Id'] || 'N/A'}>{consignment['Traveler Id'] || 'N/A'}</td>
-                    <td title={formatDate(consignment['Traveler Acceptance Date'])}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-id` ? 'copied' : ''}`}
+                      title={consignment['Traveler Id'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Traveler Id'] || 'N/A', `${index}-traveler-id`)}
+                    >
+                      {consignment['Traveler Id'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-acceptance-date` ? 'copied' : ''}`}
+                      title={formatDate(consignment['Traveler Acceptance Date'])}
+                      onClick={() => copyToClipboard(formatDate(consignment['Traveler Acceptance Date']), `${index}-acceptance-date`)}
+                    >
                       {formatDate(consignment['Traveler Acceptance Date'])}
                     </td>
-                    <td title={consignment['Traveler Name'] || 'N/A'}>{consignment['Traveler Name'] || 'N/A'}</td>
-                    <td title={consignment['Traveler Mobile No'] || 'N/A'}>{consignment['Traveler Mobile No'] || 'N/A'}</td>
-                    <td title={consignment['Traveler Address'] || 'N/A'}>{consignment['Traveler Address'] || 'N/A'}</td>
-                    <td title={`₹${Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}`}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-name` ? 'copied' : ''}`}
+                      title={consignment['Traveler Name'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Traveler Name'] || 'N/A', `${index}-traveler-name`)}
+                    >
+                      {consignment['Traveler Name'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-mobile` ? 'copied' : ''}`}
+                      title={consignment['Traveler Mobile No'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Traveler Mobile No'] || 'N/A', `${index}-traveler-mobile`)}
+                    >
+                      {consignment['Traveler Mobile No'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-address` ? 'copied' : ''}`}
+                      title={consignment['Traveler Address'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Traveler Address'] || 'N/A', `${index}-traveler-address`)}
+                    >
+                      {consignment['Traveler Address'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-amount` ? 'copied' : ''}`}
+                      title={`₹${Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}`}
+                      onClick={() => copyToClipboard(`₹${Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}`, `${index}-traveler-amount`)}
+                    >
                       ₹{Number(consignment['Amount to be paid to Traveler'] || 0).toFixed(2)}
                     </td>
-                    <td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-traveler-payment` ? 'copied' : ''}`}
+                      onClick={() => copyToClipboard(consignment['Traveler Payment Status'] || 'N/A', `${index}-traveler-payment`)}
+                    >
                       <span 
                         className={`payment ${consignment['Traveler Payment Status']?.toLowerCase() || 'unknown'}`}
                         title={consignment['Traveler Payment Status'] || 'N/A'}
@@ -339,23 +453,67 @@ const ConsignmentConsolidatedReport = () => {
                         {consignment['Traveler Payment Status'] || 'N/A'}
                       </span>
                     </td>
-                    <td title={consignment['Travel Mode'] || 'N/A'}>{consignment['Travel Mode'] || 'N/A'}</td>
-                    <td title={formatDate(consignment['Travel Start Date'])}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-travel-mode` ? 'copied' : ''}`}
+                      title={consignment['Travel Mode'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Travel Mode'] || 'N/A', `${index}-travel-mode`)}
+                    >
+                      {consignment['Travel Mode'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-travel-start` ? 'copied' : ''}`}
+                      title={formatDate(consignment['Travel Start Date'])}
+                      onClick={() => copyToClipboard(formatDate(consignment['Travel Start Date']), `${index}-travel-start`)}
+                    >
                       {formatDate(consignment['Travel Start Date'])}
                     </td>
-                    <td title={formatDate(consignment['Travel End Date'])}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-travel-end` ? 'copied' : ''}`}
+                      title={formatDate(consignment['Travel End Date'])}
+                      onClick={() => copyToClipboard(formatDate(consignment['Travel End Date']), `${index}-travel-end`)}
+                    >
                       {formatDate(consignment['Travel End Date'])}
                     </td>
-                    <td title={consignment['Recipient Name'] || 'N/A'}>{consignment['Recipient Name'] || 'N/A'}</td>
-                    <td title={consignment['Recipient Address'] || 'N/A'}>{consignment['Recipient Address'] || 'N/A'}</td>
-                    <td title={consignment['Recipient Phone no'] || 'N/A'}>{consignment['Recipient Phone no'] || 'N/A'}</td>
-                    <td title={formatDate(consignment['Received Date'])}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-recipient-name` ? 'copied' : ''}`}
+                      title={consignment['Recipient Name'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Recipient Name'] || 'N/A', `${index}-recipient-name`)}
+                    >
+                      {consignment['Recipient Name'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-recipient-address` ? 'copied' : ''}`}
+                      title={consignment['Recipient Address'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Recipient Address'] || 'N/A', `${index}-recipient-address`)}
+                    >
+                      {consignment['Recipient Address'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-recipient-phone` ? 'copied' : ''}`}
+                      title={consignment['Recipient Phone no'] || 'N/A'}
+                      onClick={() => copyToClipboard(consignment['Recipient Phone no'] || 'N/A', `${index}-recipient-phone`)}
+                    >
+                      {consignment['Recipient Phone no'] || 'N/A'}
+                    </td>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-received-date` ? 'copied' : ''}`}
+                      title={formatDate(consignment['Received Date'])}
+                      onClick={() => copyToClipboard(formatDate(consignment['Received Date']), `${index}-received-date`)}
+                    >
                       {formatDate(consignment['Received Date'])}
                     </td>
-                    <td title={`₹${Number(consignment['T&E Amount'] || 0).toFixed(2)}`}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-te-amount` ? 'copied' : ''}`}
+                      title={`₹${Number(consignment['T&E Amount'] || 0).toFixed(2)}`}
+                      onClick={() => copyToClipboard(`₹${Number(consignment['T&E Amount'] || 0).toFixed(2)}`, `${index}-te-amount`)}
+                    >
                       ₹{Number(consignment['T&E Amount'] || 0).toFixed(2)}
                     </td>
-                    <td title={`₹${Number(consignment['Tax Component'] || 0).toFixed(2)}`}>
+                    <td 
+                      className={`copyable-cell ${copiedCell === `${index}-tax-component` ? 'copied' : ''}`}
+                      title={`₹${Number(consignment['Tax Component'] || 0).toFixed(2)}`}
+                      onClick={() => copyToClipboard(`₹${Number(consignment['Tax Component'] || 0).toFixed(2)}`, `${index}-tax-component`)}
+                    >
                       ₹{Number(consignment['Tax Component'] || 0).toFixed(2)}
                     </td>
                   </tr>
@@ -366,27 +524,37 @@ const ConsignmentConsolidatedReport = () => {
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)} 
+      {/* Pagination */}
+      <div className="pagination">
+        <div className="page-controls">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="pagination-btn"
           >
-            Previous
+            «
           </button>
-          <span className="page-info">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)} 
+
+          {getPageNumbers().map((page) => (
+            <button
+              key={page}
+              className={`${currentPage === page ? "page-controls active-page" : ""}`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="pagination-btn"
           >
-            Next
+            »
           </button>
         </div>
-      )}
+        <div className="pagination-info">
+          Showing page {currentPage} of {totalPages} ({totalRecords} total records)
+        </div>
+      </div>
     </div>
   );
 };

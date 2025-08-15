@@ -409,3 +409,71 @@
     padding: 4px 8px; 
   }
 }
+
+/* Copyable cell styles */
+.copyable-cell {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  position: relative;
+}
+
+.copyable-cell:hover {
+  background-color: #e3f2fd !important;
+  transform: scale(1.02);
+}
+
+.copyable-cell:active {
+  transform: scale(0.98);
+}
+
+.copyable-cell.copied {
+  background-color: #c8e6c9 !important;
+  animation: copySuccess 0.3s ease;
+}
+
+@keyframes copySuccess {
+  0% {
+    background-color: #4caf50;
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: #c8e6c9;
+    transform: scale(1);
+  }
+}
+
+/* Copy indicator */
+.copyable-cell.copied::before {
+  content: "Copied!";
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1001;
+  animation: fadeInOut 2s ease;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-5px);
+  }
+}
