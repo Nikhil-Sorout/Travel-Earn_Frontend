@@ -51,6 +51,16 @@ const Sidebar = () => {
         </li>
         <li className={styles.sidebarMenuItem}>
           <Link
+            to="/sales-dashboard"
+            className={`${styles.sidebarLink} ${
+              location.pathname === "/sales-dashboard" ? styles.sidebarLinkActive : ""
+            }`}
+          >
+            <FaUserAlt className={styles.sidebarIcon} /> Sales Dashboard
+          </Link>
+        </li>
+        <li className={styles.sidebarMenuItem}>
+          <Link
             to="/logistics-dashboard"
             className={`${styles.sidebarLink} ${
               location.pathname === "/logistics-dashboard" ? styles.sidebarLinkActive : ""

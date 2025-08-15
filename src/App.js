@@ -21,6 +21,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import TravelerReport from "./pages/TravelerReport";
 import SenderReport from "./pages/SenderReport";
 import Reports from "./pages/Reports";
+import SalesDashboard from "./pages/Sales-Dashboard";
 function App() {
   return (
     <div className="App">
@@ -39,11 +40,11 @@ function App() {
         <Route path="/logistics-dashboard" element={<LogisticsDashboard />} />
         <Route path="/priceControl" element={<PriceControl />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
+        <Route path="/sales-dashboard" element={<SalesDashboard />} />
 
         {/* Added Support if needed */}
         <Route path="/support" element={<Support />} />
-        
+
         {/* Report Routes */}
         <Route path="/traveler-report" element={<TravelerReport />} />
         <Route path="/sender-report" element={<SenderReport />} />

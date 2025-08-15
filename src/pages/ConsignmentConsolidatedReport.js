@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getConsignmentConsolidatedReport } from '../Services/Api';
 import './Styles/ConsignmentConsolidatedReport.css';
 
@@ -12,10 +12,31 @@ const ConsignmentConsolidatedReport = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [recordsPerPage, setRecordsPerPage] = useState(100);
+  const tableContainerRef = useRef(null);
 
   useEffect(() => {
     fetchConsignmentData();
   }, [currentPage]);
+
+  useEffect(() => {
+    // Add horizontal scroll functionality with mouse wheel
+    const tableContainer = tableContainerRef.current;
+    if (!tableContainer) return;
+
+    const handleWheel = (e) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        const scrollAmount = e.deltaY || e.deltaX;
+        tableContainer.scrollLeft += scrollAmount;
+      }
+    };
+
+    tableContainer.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      tableContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const fetchConsignmentData = async () => {
     try {
@@ -234,7 +255,10 @@ const ConsignmentConsolidatedReport = () => {
         </div>
       </div>
 
-      <div className="table-container">
+      <div className="table-container" ref={tableContainerRef}>
+        <div className="scroll-hint">
+          <span>💡 Tip: Hold Shift + Mouse Wheel for horizontal scrolling</span>
+        </div>
         <div className="table-wrapper">
           <table className="consignment-table">
             <thead>
