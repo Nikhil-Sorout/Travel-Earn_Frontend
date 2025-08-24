@@ -39,8 +39,9 @@ const DriverManagement = () => {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           });
           setDrivers(response.data.data);
-          console.log(response.date.data)
+          console.log(response.data.data)
           setTotalUsers(response.data.totalCount);
+          setCurrentPage(response.data.currentPage);
         } catch (error) {
           console.error('Error fetching drivers:', error);
         
@@ -151,22 +152,20 @@ const DriverManagement = () => {
             <tr>
               <th>Traveller</th>
               <th>Phone Number</th>
-              <th>Earning</th>
-              <th>Distance</th>
+              <th>Email</th>
+              <th>Total Rating</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {drivers?.map((driver) => (
-              <tr key={driver._id} className={styles.tableTr}>
+              <tr key={driver.id} className={styles.tableTr}>
                 <td>
-                  {driver.firstName || driver.username} {driver.lastName || ""}
-                  <br />
-                  <small>{driver.email}</small>
+                  {driver.username || "N/A"}
                 </td>
-                <td>{driver.phoneNumber}</td>
-                <td>₹ {Number(driver.totalEarnings || 0).toFixed(2)}</td>
-                <td>{driver.totalDistance.toFixed(2) || 0} km</td>
+                <td>{driver.phoneNumber || "N/A"}</td>
+                <td>{driver.email || "N/A"}</td>
+                <td>{driver.totalRating || 0}</td>
                 <td>
                   <button
                     className={styles.actionButton}
@@ -216,16 +215,16 @@ const DriverManagement = () => {
         {isModalOpen && selectedUser && (
           <div className={styles.modalOverlay}>
             <div className={styles.modalContent}>
-              <h3>Driver Details</h3>
+              <h3>User Details</h3>
               <div className={styles.driverInfo}>
-                <p><strong>Name:</strong> {driverDetails.username}</p>
-                <p><strong>Email:</strong> {driverDetails.email}</p>
-                <p><strong>Phone:</strong> {driverDetails.phoneNumber}</p>
-                <p><strong>Total Earnings:</strong> ₹ {Number(driverDetails.totalEarnings.toFixed(2) || 0).toFixed(2)}</p>
-                <p><strong>Total Distance:</strong> {driverDetails.totalDistance.toFixed(2) || 0} km</p>
+                <p><strong>Name:</strong> {driverDetails?.username || "N/A"}</p>
+                <p><strong>Email:</strong> {driverDetails?.email || "N/A"}</p>
+                <p><strong>Phone:</strong> {driverDetails?.phoneNumber || "N/A"}</p>
+                <p><strong>Total Rating:</strong> {driverDetails?.totalRating || 0}</p>
+                <p><strong>User ID:</strong> {driverDetails?.id || "N/A"}</p>
               </div>
 
-              <h3 className={styles.travelHistoryHeader}>Travel History ({selectedUser?.travels?.length})</h3>
+              <h3 className={styles.travelHistoryHeader}>Travel History ({selectedUser?.travels?.length || 0})</h3>
               <div className={styles.travelHistory}>
                 {selectedUser?.travels && selectedUser?.travels?.length > 0 ? (
                   selectedUser.travels.map((travel) => (
@@ -237,12 +236,12 @@ const DriverManagement = () => {
                         </span>
                       </div>
                       <div className={styles.travelDetails}>
-                        {console.log(travel.consignmentDetails.length)}
+                        {console.log(travel.consignmentDetails?.length || 0)}
                         <p><strong>From:</strong> {travel.pickup}</p>
                         <p><strong>To:</strong> {travel.drop}</p>
                         <p><strong>Vehicle:</strong> {travel.travelMode} ({travel.travelmode_number})</p>
                         <p><strong>Scheduled:</strong> {new Date(travel.expectedStartTime).toLocaleString()} - {new Date(travel.expectedendtime).toLocaleString()}</p>
-                        <p><strong>Consignments:</strong> {travel.consignmentDetails.length}</p>
+                        <p><strong>Consignments:</strong> {travel.consignmentDetails?.length || 0}</p>
                       </div>
                       {travel.consignmentDetails && travel.consignmentDetails.length > 0 && (
                         <div className={styles.consignments}>
@@ -265,7 +264,7 @@ const DriverManagement = () => {
 
               <div className={styles.modalActions}>
                 <button className={styles.confirmButton} onClick={handleDeleteConfirm}>
-                  Delete Driver
+                  Delete User
                 </button>
                 <button className={styles.cancelButton} onClick={handleModalClose}>
                   Close
