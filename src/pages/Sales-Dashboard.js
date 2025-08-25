@@ -224,32 +224,40 @@ const SalesDashboard = () => {
                 <tbody>
                   {salesData.map((row, idx) => (
                     <tr key={idx}>
-                      <td>{row.totalNo}</td>
-                      <td>{row.transactionType}</td>
+                      <td>{row.count || 0}</td>
+                      <td>{row.type}</td>
                       <td>Rs {row.amount}</td>
                       <td>
                         <button 
                           className={styles.regionButton}
-                          onClick={() => handleRegionClick(row.transactionType)}
+                          onClick={() => handleRegionClick(row.type)}
                         >
                           Click Here
                         </button>
                       </td>
-                      <td>Train / Air / Bus</td>
+                      <td>{row.mode.charAt(0).toUpperCase() + row.mode.slice(1)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               {/* T&E Overall Revenue */}
-              {salesData.length >= 2 && (
+              {salesData.length > 0 && (
                 <div className={styles.revenueSection}>
                   <div className={styles.revenueLabel}>
                     T&E Overall Revenue:
                   </div>
                   <div className={styles.revenueAmount}>
                     Rs{" "}
-                    {(salesData[0]?.amount - salesData[1]?.amount).toFixed(2)}
+                    {(() => {
+                      const senderTotal = salesData
+                        .filter(item => item.type === 'Sender')
+                        .reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+                      const travellerTotal = salesData
+                        .filter(item => item.type === 'Traveller')
+                        .reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+                      return (senderTotal - travellerTotal).toFixed(2);
+                    })()}
                   </div>
                 </div>
               )}

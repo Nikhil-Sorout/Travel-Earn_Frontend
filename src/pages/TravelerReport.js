@@ -11,16 +11,60 @@ const TravelerReport = () => {
   const [modalType, setModalType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [copiedCell, setCopiedCell] = useState(null);
+  const recordsPerPage = 30;
 
   useEffect(() => {
     fetchTravelerData();
-  }, []);
+  }, [currentPage]);
+
+  // Function to copy text to clipboard
+  const copyToClipboard = async (text, cellId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCell(cellId);
+      // Clear the copied state after 2 seconds
+      setTimeout(() => setCopiedCell(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopiedCell(cellId);
+      setTimeout(() => setCopiedCell(null), 2000);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const maxButtons = 3;
+    let start = Math.max(currentPage - 1, 1);
+    let end = Math.min(start + maxButtons - 1, totalPages);
+
+    // Adjust start if we're near the end
+    if (end - start < maxButtons - 1) {
+      start = Math.max(end - maxButtons + 1, 1);
+    }
+
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const fetchTravelerData = async () => {
     try {
       setLoading(true);
-      const response = await getTravelerReport();
+      const response = await getTravelerReport(currentPage, recordsPerPage);
       console.log('Traveler data received:', response);
+      
       // Handle the backend response structure with data and pagination
       const data = response.data || response;
       console.log('Processed data:', data);
@@ -57,6 +101,17 @@ const TravelerReport = () => {
       }
       
       setTravelers(Array.isArray(data) ? data : []);
+      
+      // Set pagination info if available
+      if (response.pagination) {
+        setTotalPages(response.pagination.totalPages || 1);
+        setTotalRecords(response.pagination.totalRecords || 0);
+      } else {
+        // If no pagination info, calculate based on data length
+        setTotalPages(Math.ceil((Array.isArray(data) ? data.length : 0) / recordsPerPage));
+        setTotalRecords(Array.isArray(data) ? data.length : 0);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch traveler data');
@@ -81,7 +136,6 @@ const TravelerReport = () => {
   const filteredTravelers = travelers.filter(traveler => {
     // Get the name value using backend-specific logic
     const nameValue = traveler['Name'] || traveler.username || traveler.sender || '';
-    
     // Clean up address for search
     const cleanAddress = (() => {
       const address = traveler['Address'] || '';
@@ -251,12 +305,30 @@ const TravelerReport = () => {
                                }
                                return (
                  <tr key={traveler['Traveler Id'] || index}>
-                   <td className="id-cell" title={traveler['Traveler Id'] || 'N/A'}>{traveler['Traveler Id'] || 'N/A'}</td>
-                   <td className="large-value" title={traveler['Name'] || traveler.username || traveler.sender || 'N/A'}>
+                   <td 
+                     className={`id-cell copyable-cell ${copiedCell === `${index}-id` ? 'copied' : ''}`}
+                     title={traveler['Traveler Id'] || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['Traveler Id'] || 'N/A', `${index}-id`)}
+                   >
+                     {traveler['Traveler Id'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`large-value copyable-cell ${copiedCell === `${index}-name` ? 'copied' : ''}`}
+                     title={traveler['Name'] || traveler.username || traveler.sender || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['Name'] || traveler.username || traveler.sender || 'N/A', `${index}-name`)}
+                   >
                      {traveler['Name'] || traveler.username || traveler.sender || 'N/A'}
                    </td>
-                   <td className="phone-cell" title={traveler['Phone No'] || 'N/A'}>{traveler['Phone No'] || 'N/A'}</td>
-                   <td className="address-cell" title={(() => {
+                   <td 
+                     className={`phone-cell copyable-cell ${copiedCell === `${index}-phone` ? 'copied' : ''}`}
+                     title={traveler['Phone No'] || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['Phone No'] || 'N/A', `${index}-phone`)}
+                   >
+                     {traveler['Phone No'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`address-cell copyable-cell ${copiedCell === `${index}-address` ? 'copied' : ''}`}
+                     title={(() => {
                        const address = traveler['Address'] || '';
                        if (!address || 
                            address.trim() === 'to' || 
@@ -267,7 +339,18 @@ const TravelerReport = () => {
                          return 'N/A';
                        }
                        return address;
-                     })()}>
+                     })()}
+                     onClick={() => {
+                       const address = traveler['Address'] || '';
+                       const cleanAddress = (!address || 
+                           address.trim() === 'to' || 
+                           address.trim() === ' to ' || 
+                           address.includes('undefined') ||
+                           address.trim() === 'null to null' ||
+                           address.trim() === ' to') ? 'N/A' : address;
+                       copyToClipboard(cleanAddress, `${index}-address`);
+                     }}
+                   >
                      {(() => {
                        const address = traveler['Address'] || '';
                        // Clean up empty concatenations like "to", " to ", "undefined to undefined", etc.
@@ -282,9 +365,28 @@ const TravelerReport = () => {
                        return address;
                      })()}
                    </td>
-                   <td title={traveler['State'] || 'N/A'}>{traveler['State'] || 'N/A'}</td>
-                   <td title={traveler['No of Consignment'] || 1}>{traveler['No of Consignment'] || 1}</td>
-                   <td className="amount-cell" title={`₹${Number(traveler['Total Amount'] || 0).toFixed(2)}`}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-state` ? 'copied' : ''}`}
+                     title={traveler['State'] || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['State'] || 'N/A', `${index}-state`)}
+                   >
+                     {traveler['State'] || 'N/A'}
+                   </td>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-consignment-count` ? 'copied' : ''}`}
+                     title={traveler['No of Consignment'] || 1}
+                     onClick={() => copyToClipboard(String(traveler['No of Consignment'] || 1), `${index}-consignment-count`)}
+                   >
+                     {traveler['No of Consignment'] || 1}
+                   </td>
+                   <td 
+                     className={`amount-cell copyable-cell ${copiedCell === `${index}-amount` ? 'copied' : ''}`}
+                     title={`₹${Number(traveler['Total Amount'] || 0).toFixed(2)}`}
+                     onClick={() => {
+                       const amount = Number(traveler['Total Amount'] || 0);
+                       copyToClipboard(`₹${amount.toFixed(2)}`, `${index}-amount`);
+                     }}
+                   >
                      {(() => {
                        const amount = Number(traveler['Total Amount'] || 0);
                        if (amount === 0) {
@@ -293,19 +395,31 @@ const TravelerReport = () => {
                        return `₹${amount.toFixed(2)}`;
                      })()}
                    </td>
-                   <td title={traveler['Traveler\'s Consignment'] || 'No consignments'}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-consignment` ? 'copied' : ''}`}
+                     title={traveler['Traveler\'s Consignment'] || 'No consignments'}
+                     onClick={() => copyToClipboard(traveler['Traveler\'s Consignment'] || 'No consignments', `${index}-consignment`)}
+                   >
                      {traveler['Traveler\'s Consignment'] && traveler['Traveler\'s Consignment'] !== 'N/A' ? (
                        <span className="consignment-info">{traveler['Traveler\'s Consignment']}</span>
                      ) : (
                        <span className="no-consignments">No consignments</span>
                      )}
                    </td>
-                   <td title={traveler['Status of Consignment'] || 'N/A'}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
+                     title={traveler['Status of Consignment'] || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['Status of Consignment'] || 'N/A', `${index}-status`)}
+                   >
                      <span className={`status ${traveler['Status of Consignment']?.toLowerCase() || 'unknown'}`}>
                        {traveler['Status of Consignment'] || 'N/A'}
                      </span>
                    </td>
-                   <td title={traveler['Payment'] || 'N/A'}>
+                   <td 
+                     className={`copyable-cell ${copiedCell === `${index}-payment` ? 'copied' : ''}`}
+                     title={traveler['Payment'] || 'N/A'}
+                     onClick={() => copyToClipboard(traveler['Payment'] || 'N/A', `${index}-payment`)}
+                   >
                      <span className={`payment ${traveler['Payment']?.toLowerCase() || 'unknown'}`}>
                        {traveler['Payment'] || 'N/A'}
                      </span>
@@ -316,6 +430,38 @@ const TravelerReport = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="pagination">
+        <div className="page-controls">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            «
+          </button>
+
+          {getPageNumbers().map((page) => (
+            <button
+              key={page}
+              className={`${currentPage === page ? "page-controls active-page" : ""}`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            »
+          </button>
+        </div>
+        <div className="pagination-info">
+          Showing page {currentPage} of {totalPages} ({totalRecords} total records)
+        </div>
       </div>
 
       {/* Modal for consignment details */}
