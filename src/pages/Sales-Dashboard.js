@@ -13,6 +13,7 @@ const SalesDashboard = () => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFormat, setSelectedFormat] = useState("CSV");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -118,7 +119,7 @@ const SalesDashboard = () => {
     <div className={styles.mainContainer}>
       <Sidebar />
       <div className={styles.contentWrapper}>
-        <Header />
+        {/* <Header onSearch={setSearchQuery} /> */}
 
         {/* Filters */}
         <div className={styles.filtersContainer}>

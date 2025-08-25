@@ -8,12 +8,13 @@ import './Styles/Reports.css';
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('traveler');
+  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <div className="dashboard-container" style={{ display: 'flex', height: '100vh', width: '100vw' }}>
       <Sidebar />
       <div className="dashboard-content" style={{ flex: 1, overflowY: 'auto', backgroundColor: '#f5f5f5' }}>
-        <Header />
+        {/* <Header onSearch={setSearchQuery} /> */}
         <div className="reports-container">
           <div className="reports-header">
             <h1>Reports</h1>

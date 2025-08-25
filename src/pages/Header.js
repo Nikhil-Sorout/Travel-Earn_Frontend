@@ -3,7 +3,7 @@ import { FaUserCircle } from "react-icons/fa";
 import styles from "./Styles/Header.module.css";
 import { useNavigate } from "react-router-dom";
 
-const Header = ({ onSearch }) => {
+const Header = ({ onSearch = () => {} }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [adminDetails, setAdminDetails] = useState(null);

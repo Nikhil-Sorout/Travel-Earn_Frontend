@@ -6,7 +6,6 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard";
 import DriverDetails from "./pages/DriverDetails";
 import DriverManagement from "./pages/DriverManagement";
-import Header from "./pages/Header";
 import LoginPage from "./pages/Login";
 import LogisticsDashboard from "./pages/LogisticsDashboard"; // ✅ Fixed import name
 import Management from "./pages/Management";
@@ -28,7 +27,6 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/header" element={<Header />} />
         <Route path="/driver-management" element={<DriverManagement />} />
         <Route path="/payments" element={<Payments />} />
         <Route path="/user-management" element={<UserManagement />} />
@@ -37,7 +35,7 @@ function App() {
         <Route path="/driver-details" element={<DriverDetails />} />
         <Route path="/management-create" element={<ManagementCreate />} />
         <Route path="/management-view/:id" element={<ManagementView />} />
-        <Route path="/logistics-dashboard" element={<LogisticsDashboard />} />
+        {/* <Route path="/logistics-dashboard" element={<LogisticsDashboard />} /> */}
         <Route path="/priceControl" element={<PriceControl />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/sales-dashboard" element={<SalesDashboard />} />

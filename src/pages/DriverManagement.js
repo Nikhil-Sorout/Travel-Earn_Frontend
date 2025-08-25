@@ -4,6 +4,7 @@ import Header from "./Header";
 import "./Styles/DriverManagement.css";
 
 const DriverManagement = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [drivers] = useState([
     {
       id: 1,
@@ -71,7 +72,7 @@ const DriverManagement = () => {
     <div className="main-container">
       <Sidebar />
       <div className="user-details-content">
-        <Header />
+        <Header onSearch={setSearchQuery} />
         <div
           className="top-section"
           style={{ width: "20%", marginTop: 5, marginLeft: 5 }}

@@ -1,6 +1,88 @@
 import React, { useState, useEffect } from 'react';
-import { getTravelerReport } from '../Services/Api';
+import { getTravelerReport, getTravelerConsignmentDetails } from '../Services/Api';
 import './Styles/TravelerReport.css';
+
+// Material-UI components (if available, otherwise we'll use custom styling)
+const Box = ({ children, sx, ...props }) => <div style={sx} {...props}>{children}</div>;
+const Typography = ({ variant, children, sx, ...props }) => {
+  const styles = {
+    h4: { fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' },
+    h6: { fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' },
+    subtitle2: { fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.25rem' },
+    body2: { fontSize: '0.875rem' },
+    caption: { fontSize: '0.75rem', color: '#666' }
+  };
+  return <div style={{ ...styles[variant], ...sx }} {...props}>{children}</div>;
+};
+const Chip = ({ label, color, variant, size, sx, ...props }) => {
+  const colorStyles = {
+    success: { backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb' },
+    warning: { backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeaa7' },
+    error: { backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb' },
+    primary: { backgroundColor: '#e3f2fd', color: '#1976d2', border: '1px solid #bbdefb' },
+    default: { backgroundColor: '#e2e3e5', color: '#383d41', border: '1px solid #d6d8db' }
+  };
+  const sizeStyles = {
+    small: { padding: '2px 8px', fontSize: '0.75rem' },
+    medium: { padding: '4px 12px', fontSize: '0.875rem' }
+  };
+  return (
+    <span 
+      style={{ 
+        display: 'inline-block',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        fontWeight: '500',
+        ...colorStyles[color] || colorStyles.default,
+        ...sizeStyles[size] || sizeStyles.medium,
+        ...sx
+      }} 
+      {...props}
+    >
+      {label}
+    </span>
+  );
+};
+const CircularProgress = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: '400px' 
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '4px solid #f3f3f3',
+      borderTop: '4px solid #4a90e2',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
+    }}></div>
+  </div>
+);
+const Alert = ({ severity, children, sx, ...props }) => {
+  const severityStyles = {
+    error: { backgroundColor: '#f8d7da', color: '#721c24', border: '1px solid #f5c6cb' },
+    warning: { backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeaa7' },
+    info: { backgroundColor: '#d1ecf1', color: '#0c5460', border: '1px solid #bee5eb' },
+    success: { backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb' }
+  };
+  return (
+    <div 
+      style={{ 
+        padding: '12px 16px', 
+        borderRadius: '4px', 
+        marginBottom: '16px',
+        ...severityStyles[severity],
+        ...sx
+      }} 
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 
 const TravelerReport = () => {
   const [travelers, setTravelers] = useState([]);
@@ -8,13 +90,15 @@ const TravelerReport = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedConsignments, setSelectedConsignments] = useState([]);
-  const [modalType, setModalType] = useState('');
+  const [selectedTraveler, setSelectedTraveler] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [copiedCell, setCopiedCell] = useState(null);
+  const [modalCopiedCell, setModalCopiedCell] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const recordsPerPage = 30;
 
   useEffect(() => {
@@ -39,6 +123,27 @@ const TravelerReport = () => {
       document.body.removeChild(textArea);
       setCopiedCell(cellId);
       setTimeout(() => setCopiedCell(null), 2000);
+    }
+  };
+
+  // Function to copy text to clipboard for modal
+  const copyModalToClipboard = async (text, cellId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setModalCopiedCell(cellId);
+      // Clear the copied state after 2 seconds
+      setTimeout(() => setModalCopiedCell(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setModalCopiedCell(cellId);
+      setTimeout(() => setModalCopiedCell(null), 2000);
     }
   };
 
@@ -68,36 +173,20 @@ const TravelerReport = () => {
       // Handle the backend response structure with data and pagination
       const data = response.data || response;
       console.log('Processed data:', data);
-      console.log('Data type:', typeof data);
-      console.log('Is array:', Array.isArray(data));
       
       if (Array.isArray(data) && data.length > 0) {
         console.log('First traveler record keys:', Object.keys(data[0]));
-        console.log('Name field value:', data[0]['Name']);
         console.log('Sample traveler record:', {
           travelerId: data[0]['Traveler Id'],
           name: data[0]['Name'],
           phoneNo: data[0]['Phone No'],
           address: data[0]['Address'],
+          noOfTravels: data[0]['No of Travels'],
+          noOfConsignments: data[0]['No of Consignments'],
           totalAmount: data[0]['Total Amount'],
-          status: data[0]['Status of Consignment'],
-          payment: data[0]['Payment'],
-          consignment: data[0]['Traveler\'s Consignment'],
-          // Additional debugging for address and amount issues
-          rawAddress: data[0]['Address'],
-          rawAmount: data[0]['Total Amount'],
-          amountType: typeof data[0]['Total Amount']
+          status: data[0]['Status of Consignments'],
+          payment: data[0]['Payment']
         });
-        
-        // Check if address contains only "to" or similar empty concatenation
-        if (data[0]['Address'] && (data[0]['Address'].trim() === 'to' || data[0]['Address'].trim() === ' to ' || data[0]['Address'].includes('undefined'))) {
-          console.warn('⚠️ Address field contains empty concatenation:', data[0]['Address']);
-        }
-        
-        // Check if amount is 0
-        if (data[0]['Total Amount'] === 0 || data[0]['Total Amount'] === '0') {
-          console.warn('⚠️ Total Amount is 0 for traveler:', data[0]['Traveler Id']);
-        }
       }
       
       setTravelers(Array.isArray(data) ? data : []);
@@ -121,46 +210,99 @@ const TravelerReport = () => {
     }
   };
 
-  const showConsignmentDetails = (consignments, type) => {
-    setSelectedConsignments(consignments);
-    setModalType(type);
-    setShowModal(true);
+  // Get status color for chips
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'payment completed':
+      case 'paid':
+      case 'delivered':
+      case 'successful':
+      case 'completed':
+        return 'success';
+      case 'payment pending':
+      case 'pending':
+      case 'in progress':
+        return 'warning';
+      case 'no consignments':
+      case 'cancelled':
+      case 'failed':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    if (!amount || amount === 0) return '₹0.00';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  };
+
+  const handleConsignmentClick = async (travelerPhone, travelerName) => {
+    setLoadingDetails(true);
+    setSelectedTraveler({ phone: travelerPhone, name: travelerName });
+    
+    try {
+      const detailsResponse = await getTravelerConsignmentDetails(travelerPhone);
+      console.log('Consignment details received:', detailsResponse);
+      
+      const consignments = detailsResponse.data || [];
+      setSelectedConsignments(consignments);
+      setShowModal(true);
+    } catch (err) {
+      console.error('Error fetching consignment details:', err);
+      setSelectedConsignments([]);
+      setShowModal(true);
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   const closeModal = () => {
     setShowModal(false);
     setSelectedConsignments([]);
-    setModalType('');
+    setSelectedTraveler(null);
   };
 
   const filteredTravelers = travelers.filter(traveler => {
-    // Get the name value using backend-specific logic
-    const nameValue = traveler['Name'] || traveler.username || traveler.sender || '';
-    // Clean up address for search
-    const cleanAddress = (() => {
-      const address = traveler['Address'] || '';
-      if (!address || 
-          address.trim() === 'to' || 
-          address.trim() === ' to ' || 
-          address.includes('undefined') ||
-          address.trim() === 'null to null' ||
-          address.trim() === ' to') {
-        return '';
-      }
-      return address;
-    })();
+    const nameValue = traveler['Name'] || '';
+    const address = traveler['Address'] || '';
     
     const matchesSearch = 
       traveler['Traveler Id']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       nameValue.toLowerCase().includes(searchTerm.toLowerCase()) ||
       traveler['Phone No']?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cleanAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      traveler['State']?.toLowerCase().includes(searchTerm.toLowerCase());
+      address.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = filterStatus === 'all' || traveler['Status of Consignment'] === filterStatus;
+    const matchesStatus = filterStatus === 'all' || traveler['Status of Consignments'] === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
+
+  // Format date to local timezone
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      
+      return date.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+    } catch (error) {
+      return 'N/A';
+    }
+  };
 
   const exportToCSV = () => {
     const headers = [
@@ -168,44 +310,25 @@ const TravelerReport = () => {
       'Name',
       'Phone No',
       'Address',
-      'State',
-      'No of Consignment',
+      'No of Travels',
+      'No of Consignments',
       'Total Amount',
-      'Traveler\'s Consignment',
-      'Status of Consignment',
+      'Status of Consignments',
       'Payment'
     ];
 
     const csvContent = [
       headers.join(','),
       ...filteredTravelers.map(traveler => {
-        // Get the name value using backend-specific logic
-        const nameValue = traveler['Name'] || traveler.username || traveler.sender || '';
-        
-        // Clean up address for CSV export
-        const cleanAddress = (() => {
-          const address = traveler['Address'] || '';
-          if (!address || 
-              address.trim() === 'to' || 
-              address.trim() === ' to ' || 
-              address.includes('undefined') ||
-              address.trim() === 'null to null' ||
-              address.trim() === ' to') {
-            return 'N/A';
-          }
-          return address;
-        })();
-        
         return [
           traveler['Traveler Id'] || '',
-          `"${nameValue}"`,
+          `"${traveler['Name'] || ''}"`,
           traveler['Phone No'] || '',
-          `"${cleanAddress}"`,
-          traveler['State'] || '',
-          traveler['No of Consignment'] || 1,
+          `"${traveler['Address'] || ''}"`,
+          traveler['No of Travels'] || 0,
+          traveler['No of Consignments'] || 0,
           Number(traveler['Total Amount'] || 0).toFixed(2),
-          `"${traveler['Traveler\'s Consignment'] || ''}"`,
-          traveler['Status of Consignment'] || '',
+          traveler['Status of Consignments'] || '',
           traveler['Payment'] || ''
         ].join(',');
       })
@@ -225,7 +348,7 @@ const TravelerReport = () => {
   if (loading) {
     return (
       <div className="traveler-report-container">
-        <div className="loading">Loading traveler data...</div>
+        <CircularProgress />
       </div>
     );
   }
@@ -233,7 +356,7 @@ const TravelerReport = () => {
   if (error) {
     return (
       <div className="traveler-report-container">
-        <div className="error">{error}</div>
+        <Alert severity="error">{error}</Alert>
         <button onClick={fetchTravelerData} className="retry-btn">Retry</button>
       </div>
     );
@@ -242,12 +365,12 @@ const TravelerReport = () => {
   return (
     <div className="traveler-report-container">
       <div className="report-header">
-        <h1>Traveler Report</h1>
+        <Typography variant="h4">Traveler Report</Typography>
         <div className="header-controls">
           <div className="search-filter-container">
             <input
               type="text"
-              placeholder="Search by ID, name, phone, address, state..."
+              placeholder="Search by ID, name, phone, address..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
@@ -258,12 +381,9 @@ const TravelerReport = () => {
               className="status-filter"
             >
               <option value="all">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-              <option value="Delayed">Delayed</option>
-              <option value="Rescheduled">Rescheduled</option>
+              <option value="Payment Completed">Payment Completed</option>
+              <option value="Payment Pending">Payment Pending</option>
+              <option value="No Consignments">No Consignments</option>
             </select>
           </div>
           <button onClick={exportToCSV} className="export-btn">
@@ -272,161 +392,125 @@ const TravelerReport = () => {
         </div>
       </div>
 
+      <div className="summary-stats">
+        <div className="stat-card">
+          <Typography variant="subtitle2">Total Travelers</Typography>
+          <Typography variant="h6">{totalRecords}</Typography>
+        </div>
+        <div className="stat-card">
+          <Typography variant="subtitle2">Current Page</Typography>
+          <Typography variant="h6">{currentPage} of {totalPages}</Typography>
+        </div>
+        <div className="stat-card">
+          <Typography variant="subtitle2">Records Per Page</Typography>
+          <Typography variant="h6">{recordsPerPage}</Typography>
+        </div>
+      </div>
+
       <div className="table-container">
         <table className="traveler-table">
           <thead>
             <tr>
-              <th>Traveler Id</th>
+              <th>Traveler ID</th>
               <th>Name</th>
               <th>Phone No</th>
-              <th>Address</th>
-              <th>State</th>
-              <th>No of Consignment</th>
+              {/* <th>Address</th> */}
+              <th>No of Travels</th>
+              <th>No of Consignments</th>
               <th>Total Amount</th>
-              <th>Traveler's Consignment</th>
-              <th>Status of Consignment</th>
-              <th>Payment</th>
+              {/* <th>Status of Consignments</th>
+              <th>Payment</th> */}
             </tr>
           </thead>
           <tbody>
             {filteredTravelers.length === 0 ? (
               <tr>
-                <td colSpan="10" className="no-data">No traveler data available</td>
+                <td colSpan="9" className="no-data">No traveler data available</td>
               </tr>
             ) : (
-                             filteredTravelers.map((traveler, index) => {
-                               // Debug logging for first few travelers only
-                               if (index < 3) {
-                                 console.log(`Traveler ${index}:`, {
-                                   travelerId: traveler['Traveler Id'],
-                                   name: traveler['Name'],
-                                   nameType: typeof traveler['Name']
-                                 });
-                               }
-                               return (
-                 <tr key={traveler['Traveler Id'] || index}>
-                   <td 
-                     className={`id-cell copyable-cell ${copiedCell === `${index}-id` ? 'copied' : ''}`}
-                     title={traveler['Traveler Id'] || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['Traveler Id'] || 'N/A', `${index}-id`)}
-                   >
-                     {traveler['Traveler Id'] || 'N/A'}
-                   </td>
-                   <td 
-                     className={`large-value copyable-cell ${copiedCell === `${index}-name` ? 'copied' : ''}`}
-                     title={traveler['Name'] || traveler.username || traveler.sender || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['Name'] || traveler.username || traveler.sender || 'N/A', `${index}-name`)}
-                   >
-                     {traveler['Name'] || traveler.username || traveler.sender || 'N/A'}
-                   </td>
-                   <td 
-                     className={`phone-cell copyable-cell ${copiedCell === `${index}-phone` ? 'copied' : ''}`}
-                     title={traveler['Phone No'] || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['Phone No'] || 'N/A', `${index}-phone`)}
-                   >
-                     {traveler['Phone No'] || 'N/A'}
-                   </td>
-                   <td 
-                     className={`address-cell copyable-cell ${copiedCell === `${index}-address` ? 'copied' : ''}`}
-                     title={(() => {
-                       const address = traveler['Address'] || '';
-                       if (!address || 
-                           address.trim() === 'to' || 
-                           address.trim() === ' to ' || 
-                           address.includes('undefined') ||
-                           address.trim() === 'null to null' ||
-                           address.trim() === ' to') {
-                         return 'N/A';
-                       }
-                       return address;
-                     })()}
-                     onClick={() => {
-                       const address = traveler['Address'] || '';
-                       const cleanAddress = (!address || 
-                           address.trim() === 'to' || 
-                           address.trim() === ' to ' || 
-                           address.includes('undefined') ||
-                           address.trim() === 'null to null' ||
-                           address.trim() === ' to') ? 'N/A' : address;
-                       copyToClipboard(cleanAddress, `${index}-address`);
-                     }}
-                   >
-                     {(() => {
-                       const address = traveler['Address'] || '';
-                       // Clean up empty concatenations like "to", " to ", "undefined to undefined", etc.
-                       if (!address || 
-                           address.trim() === 'to' || 
-                           address.trim() === ' to ' || 
-                           address.includes('undefined') ||
-                           address.trim() === 'null to null' ||
-                           address.trim() === ' to') {
-                         return 'N/A';
-                       }
-                       return address;
-                     })()}
-                   </td>
-                   <td 
-                     className={`copyable-cell ${copiedCell === `${index}-state` ? 'copied' : ''}`}
-                     title={traveler['State'] || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['State'] || 'N/A', `${index}-state`)}
-                   >
-                     {traveler['State'] || 'N/A'}
-                   </td>
-                   <td 
-                     className={`copyable-cell ${copiedCell === `${index}-consignment-count` ? 'copied' : ''}`}
-                     title={traveler['No of Consignment'] || 1}
-                     onClick={() => copyToClipboard(String(traveler['No of Consignment'] || 1), `${index}-consignment-count`)}
-                   >
-                     {traveler['No of Consignment'] || 1}
-                   </td>
-                   <td 
-                     className={`amount-cell copyable-cell ${copiedCell === `${index}-amount` ? 'copied' : ''}`}
-                     title={`₹${Number(traveler['Total Amount'] || 0).toFixed(2)}`}
-                     onClick={() => {
-                       const amount = Number(traveler['Total Amount'] || 0);
-                       copyToClipboard(`₹${amount.toFixed(2)}`, `${index}-amount`);
-                     }}
-                   >
-                     {(() => {
-                       const amount = Number(traveler['Total Amount'] || 0);
-                       if (amount === 0) {
-                         return <span style={{color: '#6c757d', fontStyle: 'italic'}}>₹0.00</span>;
-                       }
-                       return `₹${amount.toFixed(2)}`;
-                     })()}
-                   </td>
-                   <td 
-                     className={`copyable-cell ${copiedCell === `${index}-consignment` ? 'copied' : ''}`}
-                     title={traveler['Traveler\'s Consignment'] || 'No consignments'}
-                     onClick={() => copyToClipboard(traveler['Traveler\'s Consignment'] || 'No consignments', `${index}-consignment`)}
-                   >
-                     {traveler['Traveler\'s Consignment'] && traveler['Traveler\'s Consignment'] !== 'N/A' ? (
-                       <span className="consignment-info">{traveler['Traveler\'s Consignment']}</span>
-                     ) : (
-                       <span className="no-consignments">No consignments</span>
-                     )}
-                   </td>
-                   <td 
-                     className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
-                     title={traveler['Status of Consignment'] || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['Status of Consignment'] || 'N/A', `${index}-status`)}
-                   >
-                     <span className={`status ${traveler['Status of Consignment']?.toLowerCase() || 'unknown'}`}>
-                       {traveler['Status of Consignment'] || 'N/A'}
-                     </span>
-                   </td>
-                   <td 
-                     className={`copyable-cell ${copiedCell === `${index}-payment` ? 'copied' : ''}`}
-                     title={traveler['Payment'] || 'N/A'}
-                     onClick={() => copyToClipboard(traveler['Payment'] || 'N/A', `${index}-payment`)}
-                   >
-                     <span className={`payment ${traveler['Payment']?.toLowerCase() || 'unknown'}`}>
-                       {traveler['Payment'] || 'N/A'}
-                     </span>
-                   </td>
-                 </tr>
-               );
-                             })
+              filteredTravelers.map((traveler, index) => (
+                <tr key={traveler['Traveler Id'] || index}>
+                  <td 
+                    className={`id-cell copyable-cell ${copiedCell === `${index}-id` ? 'copied' : ''}`}
+                    title={traveler['Traveler Id'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Traveler Id'] || 'N/A', `${index}-id`)}
+                  >
+                    {traveler['Traveler Id'] || 'N/A'}
+                  </td>
+                  <td 
+                    className={`large-value copyable-cell ${copiedCell === `${index}-name` ? 'copied' : ''}`}
+                    title={traveler['Name'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Name'] || 'N/A', `${index}-name`)}
+                  >
+                    {traveler['Name'] || 'N/A'}
+                  </td>
+                  <td 
+                    className={`phone-cell copyable-cell ${copiedCell === `${index}-phone` ? 'copied' : ''}`}
+                    title={traveler['Phone No'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Phone No'] || 'N/A', `${index}-phone`)}
+                  >
+                    {traveler['Phone No'] || 'N/A'}
+                  </td>
+                  {/* <td 
+                    className={`address-cell copyable-cell ${copiedCell === `${index}-address` ? 'copied' : ''}`}
+                    title={traveler['Address'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Address'] || 'N/A', `${index}-address`)}
+                  >
+                    {traveler['Address'] || 'N/A'}
+                  </td> */}
+                  <td 
+                    className={`copyable-cell ${copiedCell === `${index}-travels` ? 'copied' : ''}`}
+                    title={traveler['No of Travels'] || 0}
+                    onClick={() => copyToClipboard(String(traveler['No of Travels'] || 0), `${index}-travels`)}
+                  >
+                    {traveler['No of Travels'] || 0}
+                  </td>
+                  <td 
+                    className={`consignment-count-cell ${copiedCell === `${index}-consignment-count` ? 'copied' : ''}`}
+                    title={`Click to view ${traveler['No of Consignments'] || 0} consignments`}
+                    onClick={() => handleConsignmentClick(traveler['Phone No'], traveler['Name'])}
+                  >
+                    <Chip 
+                      label={traveler['No of Consignments'] || 0}
+                      color="primary"
+                      variant="outlined"
+                      size="small"
+                    />
+                  </td>
+                  <td 
+                    className={`amount-cell copyable-cell ${copiedCell === `${index}-amount` ? 'copied' : ''}`}
+                    title={formatCurrency(traveler['Total Amount'])}
+                    onClick={() => {
+                      const amount = Number(traveler['Total Amount'] || 0);
+                      copyToClipboard(formatCurrency(amount), `${index}-amount`);
+                    }}
+                  >
+                    {formatCurrency(traveler['Total Amount'])}
+                  </td>
+                  {/* <td 
+                    className={`copyable-cell ${copiedCell === `${index}-status` ? 'copied' : ''}`}
+                    title={traveler['Status of Consignments'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Status of Consignments'] || 'N/A', `${index}-status`)}
+                  >
+                    <Chip 
+                      label={traveler['Status of Consignments'] || 'N/A'}
+                      color={getStatusColor(traveler['Status of Consignments'])}
+                      size="small"
+                    />
+                  </td>
+                  <td 
+                    className={`copyable-cell ${copiedCell === `${index}-payment` ? 'copied' : ''}`}
+                    title={traveler['Payment'] || 'N/A'}
+                    onClick={() => copyToClipboard(traveler['Payment'] || 'N/A', `${index}-payment`)}
+                  >
+                    <Chip 
+                      label={traveler['Payment'] || 'N/A'}
+                      color={getStatusColor(traveler['Payment'])}
+                      size="small"
+                    />
+                  </td> */}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -466,47 +550,140 @@ const TravelerReport = () => {
 
       {/* Modal for consignment details */}
       {showModal && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal-overlay show" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{modalType === 'traveler' ? 'Traveler Consignments' : 'Sender Consignments'}</h2>
+              <Typography variant="h6">
+                Consignment Details for {selectedTraveler?.name || 'Traveler'}
+              </Typography>
               <button className="close-btn" onClick={closeModal}>×</button>
             </div>
             <div className="modal-body">
-              <table className="consignment-modal-table">
-                <thead>
-                  <tr>
-                    <th>Consignment ID</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Expected Earning</th>
-                    <th>Distance</th>
-                    <th>Category</th>
-                    <th>Pickup</th>
-                    <th>Delivery</th>
-                    <th>Sender Phone</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedConsignments.map((consignment, index) => (
-                    <tr key={consignment.consignmentId || index}>
-                      <td>{consignment.consignmentId || 'N/A'}</td>
-                      <td>{consignment.description || 'N/A'}</td>
-                      <td>
-                        <span className={`status ${consignment.status?.toLowerCase() || 'unknown'}`}>
-                          {consignment.status || 'N/A'}
-                        </span>
-                      </td>
-                      <td>₹{Number(consignment.expectedEarning || 0).toFixed(2)}</td>
-                      <td>{consignment.distance || 'N/A'} km</td>
-                      <td>{consignment.category || 'N/A'}</td>
-                      <td>{consignment.pickup || 'N/A'}</td>
-                      <td>{consignment.delivery || 'N/A'}</td>
-                      <td>{consignment.senderPhoneNumber || 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {loadingDetails ? (
+                <div className="loading-details">
+                  <CircularProgress />
+                  <Typography variant="body2">Loading consignment details...</Typography>
+                </div>
+              ) : selectedConsignments.length === 0 ? (
+                <div className="no-consignments-message">
+                  <Typography variant="body2">No consignment details available for this traveler.</Typography>
+                </div>
+              ) : (
+                <div>
+                  <div className="consignment-summary">
+                    <div>
+                      <Typography variant="subtitle2">Total Consignments</Typography>
+                      <Typography variant="h6">{selectedConsignments.length}</Typography>
+                    </div>
+                    <div>
+                      <Typography variant="subtitle2">Total Earnings</Typography>
+                      <Typography variant="h6">{formatCurrency(selectedConsignments.reduce((sum, c) => sum + (c.earnings || 0), 0))}</Typography>
+                    </div>
+                  </div>
+                  <div className="table-container">
+                    <table className="consignment-modal-table">
+                      <thead>
+                        <tr>
+                          <th>Consignment ID</th>
+                          <th>Status</th>
+                          <th>Payment Status</th>
+                          <th>Weight</th>
+                          <th>Dimensions</th>
+                          <th>Pickup</th>
+                          <th>Drop</th>
+                          <th>Travel Mode</th>
+                          <th>Travel Date</th>
+                          <th>Earnings</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedConsignments.map((consignment, index) => (
+                          <tr key={consignment.consignmentId || index}>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-id` ? 'copied' : ''}`}
+                              title={consignment.consignmentId || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.consignmentId || 'N/A', `modal-${index}-id`)}
+                            >
+                              {consignment.consignmentId || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-status` ? 'copied' : ''}`}
+                              title={consignment.status || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.status || 'N/A', `modal-${index}-status`)}
+                            >
+                              <Chip 
+                                label={consignment.status || 'N/A'}
+                                color={getStatusColor(consignment.status)}
+                                size="small"
+                              />
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-payment` ? 'copied' : ''}`}
+                              title={consignment.paymentStatus || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.paymentStatus || 'N/A', `modal-${index}-payment`)}
+                            >
+                              <Chip 
+                                label={consignment.paymentStatus || 'N/A'}
+                                color={getStatusColor(consignment.paymentStatus)}
+                                size="small"
+                              />
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-weight` ? 'copied' : ''}`}
+                              title={consignment.weight || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.weight || 'N/A', `modal-${index}-weight`)}
+                            >
+                              {consignment.weight || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-dimensions` ? 'copied' : ''}`}
+                              title={consignment.dimensions || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.dimensions || 'N/A', `modal-${index}-dimensions`)}
+                            >
+                              {consignment.dimensions || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-pickup` ? 'copied' : ''}`}
+                              title={consignment.pickup || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.pickup || 'N/A', `modal-${index}-pickup`)}
+                            >
+                              {consignment.pickup || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-drop` ? 'copied' : ''}`}
+                              title={consignment.drop || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.drop || 'N/A', `modal-${index}-drop`)}
+                            >
+                              {consignment.drop || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-mode` ? 'copied' : ''}`}
+                              title={consignment.travelMode || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.travelMode || 'N/A', `modal-${index}-mode`)}
+                            >
+                              {consignment.travelMode || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell ${modalCopiedCell === `modal-${index}-date` ? 'copied' : ''}`}
+                              title={consignment.travelDate || 'N/A'}
+                              onClick={() => copyModalToClipboard(consignment.travelDate || 'N/A', `modal-${index}-date`)}
+                            >
+                              {consignment.travelDate || 'N/A'}
+                            </td>
+                            <td 
+                              className={`copyable-cell amount-cell ${modalCopiedCell === `modal-${index}-earnings` ? 'copied' : ''}`}
+                              title={formatCurrency(consignment.earnings)}
+                              onClick={() => copyModalToClipboard(formatCurrency(consignment.earnings), `modal-${index}-earnings`)}
+                            >
+                              {formatCurrency(consignment.earnings)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

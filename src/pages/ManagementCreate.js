@@ -6,6 +6,7 @@ import "./Styles/ManagementCreate.css";
 import api from "../Services/Api"
 
 const ManagementCreate = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -84,7 +85,7 @@ const ManagementCreate = () => {
     <div className="main-container">
       <Sidebar />
       <div className="content-wrapper">
-        <Header />
+        <Header onSearch={setSearchQuery} />
         <div className="form-container">
           <div className="form-wrapper">
             <h2>Create New Admin Role</h2>

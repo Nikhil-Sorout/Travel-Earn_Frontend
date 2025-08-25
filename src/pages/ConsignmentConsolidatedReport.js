@@ -295,9 +295,9 @@ const ConsignmentConsolidatedReport = () => {
       </div>
 
       <div className="table-container" ref={tableContainerRef}>
-        <div className="scroll-hint">
+        {/* <div className="scroll-hint">
           <span>💡 Tip: Hold Shift + Mouse Wheel for horizontal scrolling</span>
-        </div>
+        </div> */}
         <div className="table-wrapper">
           <table className="consignment-table">
             <thead>

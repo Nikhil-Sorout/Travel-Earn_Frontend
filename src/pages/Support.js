@@ -4,6 +4,7 @@ import Sidebar from "../Components/Sidebar";
 import Header from "./Header";
 
 const Support = () => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [tickets] = useState([
     {
       id: 1234,
@@ -59,7 +60,7 @@ const Support = () => {
     <div className="main-container">
       <Sidebar />
       <div className="content-wrapper">
-        <Header />
+        <Header onSearch={setSearchQuery} />
         <div className="support-content">
           <div className="ticket-filters">
             <h2>Support Tickets</h2>

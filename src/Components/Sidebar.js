@@ -59,7 +59,7 @@ const Sidebar = () => {
             <FaUserAlt className={styles.sidebarIcon} /> Sales Dashboard
           </Link>
         </li>
-        <li className={styles.sidebarMenuItem}>
+        {/* <li className={styles.sidebarMenuItem}>
           <Link
             to="/logistics-dashboard"
             className={`${styles.sidebarLink} ${
@@ -68,7 +68,7 @@ const Sidebar = () => {
           >
             <FaMoneyBillAlt className={styles.sidebarIcon} /> Tracking
           </Link>
-        </li>
+        </li> */}
         <li className={styles.sidebarMenuItem}>
           <Link
             to="/priceControl"
